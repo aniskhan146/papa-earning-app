@@ -8,7 +8,7 @@ import sqlite3
 import json
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True) # supports_credentials=True jog kora hoyeche session er jonno
+CORS(app)
 app.secret_key = os.urandom(24)
 DATABASE = 'users.db'
 
@@ -23,7 +23,6 @@ def init_db():
     """Database table toiri kora (jodi na thake)."""
     with app.app_context():
         db = get_db()
-        # schema.sql file-ti project folder-e thakte hobe
         with open('schema.sql', 'r') as f:
             db.cursor().executescript(f.read())
         db.commit()
@@ -127,32 +126,6 @@ def claim_daily_bonus():
     update_user_data(user_data)
     
     return jsonify({'success': True, 'message': f'You received {DAILY_BONUS} bonus points!'})
-
-# --- NOTUN WITHDRAWAL ROUTE ---
-@app.route('/api/withdraw', methods=['POST'])
-def withdraw_points():
-    user_data = get_user_data()
-    data = request.json
-    try:
-        amount = float(data.get('amount', 0))
-    except (ValueError, TypeError):
-        return jsonify({'error': 'Invalid amount'}), 400
-
-    if amount <= 0:
-        return jsonify({'error': 'Withdrawal amount must be positive'}), 400
-    
-    if user_data['balance'] < amount:
-        return jsonify({'error': 'Insufficient balance'}), 400
-
-    # Shob thik thakle, balance theke point komano hocche
-    user_data['balance'] -= amount
-    add_transaction(user_data, 'Withdrawal', -amount) # Negative amount hishebe dekhano hocche
-    update_user_data(user_data)
-
-    # Real project e ekhane payment processing er kaaj hobe.
-    # Ekhon shudhu ekta success message dewa hocche.
-    return jsonify({'success': True, 'message': f'Withdrawal request for {amount} points submitted.'})
-
 
 if __name__ == '__main__':
     init_db() # Server shuru howar age database toiri kore nebe
