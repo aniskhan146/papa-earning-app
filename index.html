@@ -146,221 +146,220 @@
 
     <script>
         // --- Configuration ---
-        const ADSGRAM_BLOCK_ID = "13579";
-        
-        // *** GURUTWOPURNO PORIBORTON ***
-        // Ekhane ekhon apnar Render theke pawa public URL-ti dewa ache.
-        const SERVER_URL = 'https://papa-earning-app.onrender.com'; 
+const ADSGRAM_BLOCK_ID = "13579";
 
-        let adController;
-        let cooldownInterval;
+// এখানে তোমার backend URL সেট করো ঠিক যেমন এইটা:
+const SERVER_URL = 'https://papa-earning-app.onrender.com'; 
 
-        // --- DOM Elements ---
-        const mainContent = document.querySelector('main');
-        const navBar = document.querySelector('nav');
-        const balanceElement = document.getElementById('balance');
-        const lifetimePointsElement = document.getElementById('lifetimePoints');
-        const viewAdBtn = document.getElementById('viewAdBtn');
-        const viewMonetagAdBtn = document.getElementById('viewMonetagAdBtn');
-        const viewMonetagRewardedAdBtn = document.getElementById('viewMonetagRewardedAdBtn');
-        const messageArea = document.getElementById('messageArea');
-        const bonusMessage = document.getElementById('bonusMessage');
-        const dailyBonusBtn = document.getElementById('dailyBonusBtn');
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const pages = document.querySelectorAll('.page');
-        const referralLinkInput = document.getElementById('referralLinkInput');
-        const copyReferralBtn = document.getElementById('copyReferralBtn');
-        const referralBonusText = document.getElementById('referralBonusText');
-        const submitWithdrawBtn = document.getElementById('submitWithdrawBtn');
-        const historyList = document.getElementById('historyList');
+let adController;
+let cooldownInterval;
 
-        // --- Functions ---
-        async function fetchData() {
-            if (SERVER_URL === 'https://papa-earning-app.onrender.com') {
-                messageArea.textContent = "Please set your Backend URL in the code.";
-                return;
-            }
-            try {
-                const response = await fetch(`${SERVER_URL}/api/data`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                updateUI(data);
-            } catch (error) {
-                console.error('Failed to fetch data:', error);
-                messageArea.textContent = "Could not connect to server.";
-            }
-        }
+// --- DOM Elements ---
+const mainContent = document.querySelector('main');
+const navBar = document.querySelector('nav');
+const balanceElement = document.getElementById('balance');
+const lifetimePointsElement = document.getElementById('lifetimePoints');
+const viewAdBtn = document.getElementById('viewAdBtn');
+const viewMonetagAdBtn = document.getElementById('viewMonetagAdBtn');
+const viewMonetagRewardedAdBtn = document.getElementById('viewMonetagRewardedAdBtn');
+const messageArea = document.getElementById('messageArea');
+const bonusMessage = document.getElementById('bonusMessage');
+const dailyBonusBtn = document.getElementById('dailyBonusBtn');
+const navButtons = document.querySelectorAll('.nav-btn');
+const pages = document.querySelectorAll('.page');
+const referralLinkInput = document.getElementById('referralLinkInput');
+const copyReferralBtn = document.getElementById('copyReferralBtn');
+const referralBonusText = document.getElementById('referralBonusText');
+const submitWithdrawBtn = document.getElementById('submitWithdrawBtn');
+const historyList = document.getElementById('historyList');
 
-        function updateUI(data) {
-            balanceElement.textContent = data.balance.toFixed(2);
-            lifetimePointsElement.textContent = data.lifetime_points.toFixed(2);
-            renderHistory(data.history);
-            checkDailyBonusStatus(data.last_daily_bonus);
-            
-            const now = new Date().getTime() / 1000;
-            const timePassed = now - data.last_ad_time;
-            const cooldownSeconds = 30;
-            
-            if (timePassed < cooldownSeconds) {
-                startGlobalCooldownTimer(cooldownSeconds - timePassed);
-            }
-        }
+// --- Functions ---
+async function fetchData() {
+    if (!SERVER_URL || SERVER_URL.trim() === '') {
+        messageArea.textContent = "Please set your Backend URL in the code.";
+        return;
+    }
+    try {
+        const response = await fetch(`${SERVER_URL}/api/data`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        updateUI(data);
+    } catch (error) {
+        console.error('Failed to fetch data:', error);
+        messageArea.textContent = "Could not connect to server.";
+    }
+}
 
-        function renderHistory(history) {
-            historyList.innerHTML = history.length === 0 ? `<p class="text-gray-500 text-center">No transaction history.</p>` :
-                history.map(tx => {
-                    const txDate = new Date(tx.date);
-                    const dateString = txDate.toLocaleDateString();
-                    const timeString = txDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    return `
-                        <div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-lg">
-                            <div>
-                                <p class="font-semibold">${tx.type}</p>
-                                <p class="text-xs text-gray-400">${dateString} at ${timeString}</p>
-                            </div>
-                            <p class="font-bold text-green-400">+${tx.amount.toFixed(2)}</p>
-                        </div>`;
-                }).join('');
-        }
+function updateUI(data) {
+    balanceElement.textContent = data.balance.toFixed(2);
+    lifetimePointsElement.textContent = data.lifetime_points.toFixed(2);
+    renderHistory(data.history);
+    checkDailyBonusStatus(data.last_daily_bonus);
 
-        function showPage(pageId) {
-            pages.forEach(page => page.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === pageId));
-            if (pageId === 'profilePage') fetchData(); // Refresh history on page view
-        }
+    const now = new Date().getTime() / 1000;
+    const timePassed = now - data.last_ad_time;
+    const cooldownSeconds = 30;
 
-        function initializeAdsGram() {
-            if (window.Adsgram && ADSGRAM_BLOCK_ID !== "YOUR_ADSGRAM_BLOCK_ID") {
-                adController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
-            } else {
-                viewAdBtn.textContent = !window.Adsgram ? "Ad Service Error" : "Setup Required";
-                viewAdBtn.disabled = true;
-                viewAdBtn.classList.add('btn-disabled');
-                viewAdBtn.classList.remove('btn-grad-green');
-            }
-        }
+    if (timePassed < cooldownSeconds) {
+        startGlobalCooldownTimer(cooldownSeconds - timePassed);
+    }
+}
 
-        async function triggerReward(adType) {
-            if (SERVER_URL === 'https://papa-earning-app.onrender.com') {
-                messageArea.textContent = "Backend URL is not configured.";
-                return;
-            }
-            try {
-                const response = await fetch(`${SERVER_URL}/api/reward`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: adType })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    messageArea.textContent = `🎉 Reward claimed!`;
-                    fetchData();
-                } else {
-                    messageArea.textContent = data.error || "Cooldown active.";
-                }
-            } catch (error) {
-                console.error('Failed to trigger reward:', error);
-                messageArea.textContent = "Server error.";
-            }
-        }
+function renderHistory(history) {
+    historyList.innerHTML = history.length === 0 ? `<p class="text-gray-500 text-center">No transaction history.</p>` :
+        history.map(tx => {
+            const txDate = new Date(tx.date);
+            const dateString = txDate.toLocaleDateString();
+            const timeString = txDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-lg">
+                    <div>
+                        <p class="font-semibold">${tx.type}</p>
+                        <p class="text-xs text-gray-400">${dateString} at ${timeString}</p>
+                    </div>
+                    <p class="font-bold text-green-400">+${tx.amount.toFixed(2)}</p>
+                </div>`;
+        }).join('');
+}
 
-        function handleViewAd() {
-            if (!adController) return;
-            adController.show().then(() => {
-                triggerReward('adsgram');
-            }).catch(() => {
-                messageArea.textContent = "Ad was skipped. No points earned.";
-            });
-        }
-        
-        function handleMonetagRewardedAd() {
-            show_9678845().then(() => {
-                triggerReward('monetag_rewarded');
-            }).catch(() => {
-                messageArea.textContent = "Ad was skipped. No points earned.";
-            });
-        }
+function showPage(pageId) {
+    pages.forEach(page => page.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === pageId));
+    if (pageId === 'profilePage') fetchData(); // Refresh history on page view
+}
 
-        function handleMonetagInterstitial() {
-            show_9678845({ type: 'inApp', inAppSettings: { frequency: 1, capping: 0.01, interval: 1, timeout: 1 } });
-            triggerReward('monetag_interstitial');
-        }
+function initializeAdsGram() {
+    if (window.Adsgram && ADSGRAM_BLOCK_ID !== "YOUR_ADSGRAM_BLOCK_ID") {
+        adController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+    } else {
+        viewAdBtn.textContent = !window.Adsgram ? "Ad Service Error" : "Setup Required";
+        viewAdBtn.disabled = true;
+        viewAdBtn.classList.add('btn-disabled');
+        viewAdBtn.classList.remove('btn-grad-green');
+    }
+}
 
-        function startGlobalCooldownTimer(initialRemaining) {
-            clearInterval(cooldownInterval);
-            let remaining = Math.ceil(initialRemaining);
-
-            [viewAdBtn, viewMonetagAdBtn, viewMonetagRewardedAdBtn].forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('btn-disabled');
-                btn.classList.remove('btn-grad-green', 'btn-grad-blue', 'btn-grad-purple');
-            });
-
-            cooldownInterval = setInterval(() => {
-                if (remaining > 0) {
-                    messageArea.textContent = `Next ad bonus in ${remaining}s`;
-                    remaining--;
-                } else {
-                    clearInterval(cooldownInterval);
-                    messageArea.textContent = 'Ad bonus is available now!';
-                    [viewAdBtn, viewMonetagAdBtn, viewMonetagRewardedAdBtn].forEach(btn => btn.disabled = false);
-                    viewAdBtn.classList.remove('btn-disabled');
-                    viewMonetagAdBtn.classList.remove('btn-disabled');
-                    viewMonetagRewardedAdBtn.classList.remove('btn-disabled');
-                    viewAdBtn.classList.add('btn-grad-green');
-                    viewMonetagAdBtn.classList.add('btn-grad-blue');
-                    viewMonetagRewardedAdBtn.classList.add('btn-grad-purple');
-                }
-            }, 1000);
-        }
-
-        async function handleDailyBonus() {
-            try {
-                const response = await fetch(`${SERVER_URL}/api/daily_bonus`, { method: 'POST' });
-                const data = await response.json();
-                if (response.ok) {
-                    bonusMessage.textContent = data.message;
-                    fetchData();
-                } else {
-                    bonusMessage.textContent = data.error;
-                }
-            } catch (error) {
-                bonusMessage.textContent = "Server error.";
-            }
-        }
-
-        function checkDailyBonusStatus(lastClaimISO) {
-            if (!lastClaimISO) {
-                dailyBonusBtn.disabled = false;
-                return;
-            }
-            const lastClaimDate = new Date(lastClaimISO).toDateString();
-            const today = new Date().toDateString();
-            if (lastClaimDate === today) {
-                dailyBonusBtn.disabled = true;
-                dailyBonusBtn.classList.add('btn-disabled');
-            } else {
-                dailyBonusBtn.disabled = false;
-                dailyBonusBtn.classList.remove('btn-disabled');
-            }
-        }
-        
-        function setupReferralPage() {
-            referralLinkInput.value = `${window.location.href.split('?')[0]}?ref=USER123`;
-        }
-
-        // --- Event Listeners & Initial Setup ---
-        navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
-        viewAdBtn.addEventListener('click', handleViewAd);
-        viewMonetagAdBtn.addEventListener('click', handleMonetagInterstitial);
-        viewMonetagRewardedAdBtn.addEventListener('click', handleMonetagRewardedAd);
-        dailyBonusBtn.addEventListener('click', handleDailyBonus);
-        
-        window.addEventListener('load', () => {
-            fetchData();
-            initializeAdsGram();
+async function triggerReward(adType) {
+    if (!SERVER_URL || SERVER_URL.trim() === '') {
+        messageArea.textContent = "Backend URL is not configured.";
+        return;
+    }
+    try {
+        const response = await fetch(`${SERVER_URL}/api/reward`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: adType })
         });
+        const data = await response.json();
+        if (response.ok) {
+            messageArea.textContent = `🎉 Reward claimed!`;
+            fetchData();
+        } else {
+            messageArea.textContent = data.error || "Cooldown active.";
+        }
+    } catch (error) {
+        console.error('Failed to trigger reward:', error);
+        messageArea.textContent = "Server error.";
+    }
+}
+
+function handleViewAd() {
+    if (!adController) return;
+    adController.show().then(() => {
+        triggerReward('adsgram');
+    }).catch(() => {
+        messageArea.textContent = "Ad was skipped. No points earned.";
+    });
+}
+
+function handleMonetagRewardedAd() {
+    show_9678845().then(() => {
+        triggerReward('monetag_rewarded');
+    }).catch(() => {
+        messageArea.textContent = "Ad was skipped. No points earned.";
+    });
+}
+
+function handleMonetagInterstitial() {
+    show_9678845({ type: 'inApp', inAppSettings: { frequency: 1, capping: 0.01, interval: 1, timeout: 1 } });
+    triggerReward('monetag_interstitial');
+}
+
+function startGlobalCooldownTimer(initialRemaining) {
+    clearInterval(cooldownInterval);
+    let remaining = Math.ceil(initialRemaining);
+
+    [viewAdBtn, viewMonetagAdBtn, viewMonetagRewardedAdBtn].forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add('btn-disabled');
+        btn.classList.remove('btn-grad-green', 'btn-grad-blue', 'btn-grad-purple');
+    });
+
+    cooldownInterval = setInterval(() => {
+        if (remaining > 0) {
+            messageArea.textContent = `Next ad bonus in ${remaining}s`;
+            remaining--;
+        } else {
+            clearInterval(cooldownInterval);
+            messageArea.textContent = 'Ad bonus is available now!';
+            [viewAdBtn, viewMonetagAdBtn, viewMonetagRewardedAdBtn].forEach(btn => btn.disabled = false);
+            viewAdBtn.classList.remove('btn-disabled');
+            viewMonetagAdBtn.classList.remove('btn-disabled');
+            viewMonetagRewardedAdBtn.classList.remove('btn-disabled');
+            viewAdBtn.classList.add('btn-grad-green');
+            viewMonetagAdBtn.classList.add('btn-grad-blue');
+            viewMonetagRewardedAdBtn.classList.add('btn-grad-purple');
+        }
+    }, 1000);
+}
+
+async function handleDailyBonus() {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/daily_bonus`, { method: 'POST' });
+        const data = await response.json();
+        if (response.ok) {
+            bonusMessage.textContent = data.message;
+            fetchData();
+        } else {
+            bonusMessage.textContent = data.error;
+        }
+    } catch (error) {
+        bonusMessage.textContent = "Server error.";
+    }
+}
+
+function checkDailyBonusStatus(lastClaimISO) {
+    if (!lastClaimISO) {
+        dailyBonusBtn.disabled = false;
+        return;
+    }
+    const lastClaimDate = new Date(lastClaimISO).toDateString();
+    const today = new Date().toDateString();
+    if (lastClaimDate === today) {
+        dailyBonusBtn.disabled = true;
+        dailyBonusBtn.classList.add('btn-disabled');
+    } else {
+        dailyBonusBtn.disabled = false;
+        dailyBonusBtn.classList.remove('btn-disabled');
+    }
+}
+
+function setupReferralPage() {
+    referralLinkInput.value = `${window.location.href.split('?')[0]}?ref=USER123`;
+}
+
+// --- Event Listeners & Initial Setup ---
+navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+viewAdBtn.addEventListener('click', handleViewAd);
+viewMonetagAdBtn.addEventListener('click', handleMonetagInterstitial);
+viewMonetagRewardedAdBtn.addEventListener('click', handleMonetagRewardedAd);
+dailyBonusBtn.addEventListener('click', handleDailyBonus);
+
+window.addEventListener('load', () => {
+    fetchData();
+    initializeAdsGram();
+});
     </script>
 </body>
 </html>
