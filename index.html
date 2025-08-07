@@ -2,304 +2,280 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAPA Earning Web App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PAPA TAP Game</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Swiper.js for the slider -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- AdsGram SDK -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <!-- Monetag SDK: ঠিক করা হয়েছে -> src অ্যাট্রিবিউটে ডাবল কোট ব্যবহার করা হয়েছে -->
-    <script src="//libtl.com/sdk.js" data-zone="9678845" data-sdk="show_9678845"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .nav-btn { transition: all 0.3s ease; }
-        .nav-btn.active { color: #4ade80; transform: translateY(-4px); }
-        .page { display: none; }
-        .page.active { display: block; }
-        .btn-grad-green { background-image: linear-gradient(to right, #1D976C 0%, #93F9B9 51%, #1D976C 100%); }
-        .btn-grad-blue { background-image: linear-gradient(to right, #00c6ff 0%, #0072ff 51%, #00c6ff 100%); }
-        .btn-grad-purple { background-image: linear-gradient(to right, #DA22FF 0%, #9733EE 51%, #DA22FF 100%); }
-        .btn-grad { transition: 0.5s; background-size: 200% auto; color: white; }
-        .btn-grad:hover { background-position: right center; }
-        .btn-disabled { background-image: none; background-color: #4b5563; cursor: not-allowed; opacity: 0.6; }
+        body { font-family: 'Poppins', sans-serif; }
+        .tap-circle.tapped { transform: scale(0.95); }
+        .floating-number {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            opacity: 1;
+            transition: all 1s ease-out;
+            pointer-events: none;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col h-screen">
+<body class="bg-gradient-to-t from-orange-500 to-yellow-400 text-white select-none">
 
-    <main class="flex-grow p-4 overflow-y-auto">
-        <!-- Earn Page -->
-        <div id="earnPage" class="page active">
-            <div class="text-center mb-6"><h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-teal-400">PAPA Earning</h1></div>
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="bg-gray-700/50 p-4 rounded-xl text-center"><p class="text-gray-400 text-sm">Current Balance</p><p id="balance" class="text-2xl font-bold text-green-400">0.00</p></div>
-                <div class="bg-gray-700/50 p-4 rounded-xl text-center"><p class="text-gray-400 text-sm">Lifetime Points</p><p id="lifetimePoints" class="text-2xl font-bold text-teal-300">0.00</p></div>
+<div id="app-container" class="flex flex-col h-screen max-w-md mx-auto bg-gray-900/50 backdrop-blur-sm">
+    
+    <!-- MAIN EARN PAGE -->
+    <div id="earnPage" class="page active flex-grow flex flex-col p-4 space-y-4 overflow-hidden">
+        
+        <!-- Top Currency Bar -->
+        <header class="flex items-center justify-between space-x-2 bg-black/20 p-2 rounded-xl">
+            <div class="flex items-center space-x-2">
+                <img src="https://img.icons8.com/plasticine/100/token-pivx.png" alt="coin" class="w-8 h-8">
+                <div>
+                    <p class="text-xs text-gray-300">Points</p>
+                    <p id="pointsBalance" class="font-bold text-lg">1,250</p>
+                </div>
             </div>
-            
-            <div class="text-center my-6 space-y-4">
-                <!-- ঠিক করা হয়েছে -> type="button" যোগ করা হয়েছে -->
-                <button type="button" id="viewAdBtn" class="w-full btn-grad btn-grad-green font-semibold py-3 px-6 rounded-lg shadow-lg text-lg">💰 Watch Ad (AdsGram)</button>
-                <!-- ঠিক করা হয়েছে -> type="button" যোগ করা হয়েছে এবং '&' কে '&amp;' করা হয়েছে -->
-                <button type="button" id="viewMonetagRewardedAdBtn" class="w-full btn-grad btn-grad-purple font-semibold py-3 px-6 rounded-lg shadow-lg text-lg">🎁 Watch &amp; Earn (Monetag)</button>
-                <button type="button" id="viewMonetagAdBtn" class="w-full btn-grad btn-grad-blue font-semibold py-3 px-6 rounded-lg shadow-lg text-lg" disabled>💎 Show Ad (For Pop-ups)</button>
+             <div class="flex items-center space-x-2">
+                <img src="https://img.icons8.com/fluency/48/stack-of-coins.png" alt="coin" class="w-8 h-8">
+                <div>
+                    <p class="text-xs text-gray-300">Coins</p>
+                    <p id="coinsBalance" class="font-bold text-lg">5.7M</p>
+                </div>
             </div>
-            <div id="messageArea" class="text-center mt-4 text-yellow-400 h-6"></div>
+             <div class="flex items-center space-x-2">
+                <img src="https://img.icons8.com/color/48/us-dollar-circled--v1.png" alt="usdt" class="w-8 h-8">
+                <div>
+                    <p class="text-xs text-gray-300">USDT</p>
+                    <p id="usdtBalance" class="font-bold text-lg">0.00</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- League & Ads to Earn -->
+        <section class="flex justify-between items-center">
+            <button type="button" class="bg-gray-800/80 px-4 py-2 rounded-lg font-semibold flex items-center space-x-2">
+                <img src="https://img.icons8.com/arcade/64/trophy.png" class="w-6 h-6" alt="trophy"/>
+                <span id="leagueName">Gold League</span>
+            </button>
+            <button type="button" onclick="showPage('adsPage')" class="bg-red-600 px-4 py-2 rounded-lg font-semibold">Ads to Earn</button>
+        </section>
+
+        <!-- Main Tap Area -->
+        <main id="tap-area" class="flex-grow flex flex-col items-center justify-center relative">
+            <div id="tap-circle" class="tap-circle w-64 h-64 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center shadow-2xl transition-transform duration-75 ease-in-out">
+                <p class="text-4xl font-black">TAP!</p>
+            </div>
+        </main>
+
+        <!-- Energy Counter and Boost Button -->
+        <section class="flex items-center justify-between space-x-4">
+            <div class="flex items-center space-x-2">
+                <img src="https://img.icons8.com/stickers/100/lightning-bolt.png" alt="energy" class="w-10 h-10"/>
+                <div>
+                    <p id="energyCounter" class="text-2xl font-bold">500</p>
+                    <p class="text-xs text-gray-200">/ 500</p>
+                </div>
+            </div>
+            <button type="button" class="bg-red-500 hover:bg-red-600 font-bold py-3 px-8 rounded-full shadow-lg">🚀 Boost</button>
+        </section>
+
+    </div>
+
+    <!-- ADS PAGE -->
+    <div id="adsPage" class="page hidden flex-grow flex flex-col p-4 items-center justify-center">
+        <h1 class="text-3xl font-bold mb-8">Watch Ads to Earn</h1>
+        <p class="mb-6">Watch a rewarded ad to earn more points!</p>
+        <button type="button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg">Watch Rewarded Ad</button>
+        <button type="button" onclick="showPage('earnPage')" class="mt-8 text-gray-300">Go Back</button>
+    </div>
+
+    <!-- TASK/PROFILE PAGES (Future use) -->
+    <div id="taskPage" class="page hidden flex-grow flex flex-col p-4 items-center justify-center">
+        <h1 class="text-3xl font-bold">Tasks are coming soon!</h1>
+        <button type="button" onclick="showPage('earnPage')" class="mt-8 text-gray-300">Go Back</button>
+    </div>
+    <div id="profilePage" class="page hidden flex-grow flex flex-col p-4 items-center justify-center">
+        <h1 class="text-3xl font-bold">Profile page is under construction!</h1>
+        <button type="button" onclick="showPage('earnPage')" class="mt-8 text-gray-300">Go Back</button>
+    </div>
+
+
+    <!-- Bottom Navigation Slider -->
+    <footer class="bg-black/50 p-2">
+        <div class="swiper bottom-nav-slider">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide nav-item" data-page="earnPage">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 12.592a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21.129 11.238a9.141 9.141 0 1 0-11.832 9.043 8.852 8.852 0 0 1 2.94-.908 6.784 6.784 0 0 0 5.483-3.056 6.732 6.732 0 0 0-.214-7.238Z"></path></svg>
+                    <span>Earn</span>
+                </div>
+                <div class="swiper-slide nav-item" data-page="adsPage">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.235a.375.375 0 0 1-.541-.328V8.765a.375.375 0 0 1 .541-.328l5.603 3.235Z"></path></svg>
+                    <span>Ads</span>
+                </div>
+                <div class="swiper-slide nav-item" data-page="taskPage">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836A8.995 8.995 0 0 1 12 3c5.523 0 10 2.239 10 5s-4.477 5-10 5-10-2.239-10-5c0-1.294.613-2.484 1.583-3.327"></path><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a2 2 0 0 1-2-2v-6m4 8a2 2 0 0 0-2-2v-6m0 0a2 2 0 1 0-4 0v6a2 2 0 0 0 2 2m4 0a2 2 0 0 1 2-2v-6m0 0a2 2 0 1 1-4 0v6a2 2 0 0 1 2 2m-8-2.923A8.963 8.963 0 0 1 2.417 11.75 8.963 8.963 0 0 1 2 11c0-2.203 2.898-4.148 7-4.836"></path></svg>
+                    <span>Task</span>
+                </div>
+                <div class="swiper-slide nav-item" data-page="profilePage">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75a17.933 17.933 0 0 1-7.499-1.632Z"></path></svg>
+                    <span>Profile</span>
+                </div>
+            </div>
         </div>
+        <style>
+            .nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #9ca3af;
+                padding: 4px 0;
+                cursor: pointer;
+                transition: color 0.3s;
+                width: 25% !important; /* Forces 4 items to be visible */
+            }
+            .nav-item:hover, .nav-item.active {
+                color: #ffffff;
+            }
+            .nav-item.active { transform: scale(1.1); }
+            .nav-item span { font-size: 0.7rem; font-weight: 500; }
+        </style>
+    </footer>
+</div>
 
-        <!-- Referral Page -->
-        <div id="referPage" class="page">
-            <h2 class="text-2xl font-bold text-center mb-6 text-green-400">Refer a Friend</h2>
-            <div class="bg-gray-800 p-6 rounded-lg text-center">
-                <p class="mb-4 text-gray-300">Share this link with your friends. When they join, you'll earn <span id="referralBonusText"></span> points!</p>
-                <input id="referralLinkInput" type="text" value="" readonly class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white text-center">
-                <button type="button" id="copyReferralBtn" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Copy Link</button>
-            </div>
-        </div>
 
-        <!-- Withdraw Page -->
-        <div id="withdrawPage" class="page">
-            <h2 class="text-2xl font-bold text-center mb-6 text-green-400">Withdraw Points</h2>
-            <div class="bg-gray-800 p-6 rounded-lg">
-                <p class="mb-4 text-gray-300">Enter your withdrawal details below.</p>
-                <input type="text" placeholder="Your Wallet Address" class="w-full p-3 rounded bg-gray-700 border border-gray-600 mb-3 text-white">
-                <input type="number" placeholder="Amount (e.g., 10.00)" class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white">
-                <button type="button" id="submitWithdrawBtn" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Submit Request</button>
-            </div>
-        </div>
-
-        <!-- Profile Page with History -->
-        <div id="profilePage" class="page">
-            <h2 class="text-2xl font-bold text-center mb-4 text-green-400">Profile &amp; History</h2> <!-- ঠিক করা হয়েছে: &amp; -->
-             <div class="bg-gray-800 p-6 rounded-lg text-center mb-4">
-                <p class="mb-4 text-gray-300">Claim your daily bonus once every 24 hours!</p>
-                <button type="button" id="dailyBonusBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg text-lg">🎁 Claim Daily Bonus</button>
-                <p id="bonusMessage" class="mt-4 text-yellow-400 h-6"></p>
-            </div>
-            <h3 class="text-xl font-bold text-center mb-4 text-gray-300">Transaction History</h3>
-            <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto"><!-- History items --></div>
-        </div>
-    </main>
-
-    <!-- Bottom Navigation -->
-    <nav class="bg-gray-800 shadow-lg p-2 flex justify-around">
-        <button type="button" data-page="earnPage" class="nav-btn active flex-1 flex flex-col items-center text-gray-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>
-            <span class="text-xs">Earn</span>
-        </button>
-        <button type="button" data-page="referPage" class="nav-btn flex-1 flex flex-col items-center text-gray-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span class="text-xs">Refer</span>
-        </button>
-        <button type="button" data-page="withdrawPage" class="nav-btn flex-1 flex flex-col items-center text-gray-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span class="text-xs">Withdraw</span>
-        </button>
-        <button type="button" data-page="profilePage" class="nav-btn flex-1 flex flex-col items-center text-gray-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-            <span class="text-xs">Profile</span>
-        </button>
-    </nav>
-
-    <!-- সম্পূর্ণ এবং কার্যকরী JavaScript কোড -->
-    <script>
-    // --- Configuration ---
-    const ADSGRAM_BLOCK_ID = "YOUR_ACTUAL_ADSGRAM_ID"; // এখানে আপনার আসল AdsGram ID দিন
-    const SERVER_URL = 'https://papa-earning-app.onrender.com';
-    let adController;
-    let globalCooldownInterval;
+<script>
+    // --- Configuration & State ---
+    const SERVER_URL = 'https://papa-earning-app.onrender.com'; // Your Render URL
+    let gameState = {
+        userId: 'guest_user',
+        points: 1250,
+        coins: 5700000,
+        energy: 500,
+        maxEnergy: 500,
+        pointsPerTap: 1
+    };
 
     // --- DOM Elements ---
-    const balanceElement = document.getElementById('balance');
-    const lifetimePointsElement = document.getElementById('lifetimePoints');
-    const viewAdBtn = document.getElementById('viewAdBtn');
-    const viewMonetagAdBtn = document.getElementById('viewMonetagAdBtn');
-    const viewMonetagRewardedAdBtn = document.getElementById('viewMonetagRewardedAdBtn');
-    const messageArea = document.getElementById('messageArea');
-    const bonusMessage = document.getElementById('bonusMessage');
-    const dailyBonusBtn = document.getElementById('dailyBonusBtn');
-    const navButtons = document.querySelectorAll('.nav-btn');
+    const pointsBalanceEl = document.getElementById('pointsBalance');
+    const coinsBalanceEl = document.getElementById('coinsBalance');
+    const energyCounterEl = document.getElementById('energyCounter');
+    const tapCircle = document.getElementById('tap-circle');
+    const tapArea = document.getElementById('tap-area');
     const pages = document.querySelectorAll('.page');
-    const historyList = document.getElementById('historyList');
+    const navItems = document.querySelectorAll('.nav-item');
 
-    function showPage(pageId) {
-        pages.forEach(page => page.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === pageId));
-        if (pageId === 'profilePage') fetchData();
-    }
-    
-    function initializeAdsGram() {
-        if (window.Adsgram && ADSGRAM_BLOCK_ID && ADSGRAM_BLOCK_ID !== "YOUR_ACTUAL_ADSGRAM_ID") {
-            try {
-                adController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
-            } catch (e) {
-                console.error("AdsGram init failed:", e);
-                disableButton(viewAdBtn, "AdsGram Error");
-            }
-        } else {
-            disableButton(viewAdBtn, !window.Adsgram ? "Ad Service Error" : "Setup Required");
-        }
+    // --- Core Functions ---
+
+    function updateUI() {
+        pointsBalanceEl.textContent = Math.floor(gameState.points).toLocaleString();
+        coinsBalanceEl.textContent = (gameState.coins / 1000000).toFixed(1) + 'M';
+        energyCounterEl.textContent = gameState.energy;
     }
 
-    async function triggerReward(adType) {
-        try {
-            messageArea.textContent = 'Verifying reward...';
-            disableAllAdButtons(); // পয়েন্ট পাওয়ার সময় বাটন নিষ্ক্রিয় করা
-            const response = await fetch(`${SERVER_URL}/api/reward`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: adType })
-            });
-            const data = await response.json();
-            
-            if (response.ok) {
-                messageArea.textContent = `🎉 ${data.message}`;
-                fetchData(); // Fetch the latest data to update UI and cooldown
-            } else {
-                messageArea.textContent = data.error || "Could not claim reward.";
-                resetAllButtonVisuals();
-            }
-        } catch (error) {
-            console.error('Failed to trigger reward:', error);
-            messageArea.textContent = "Server error. Could not claim reward.";
-            resetAllButtonVisuals();
-        }
-    }
+    function handleTap(event) {
+        if (gameState.energy <= 0) return;
 
-    function handleViewAd() {
-        if (!adController || viewAdBtn.disabled) return;
-        messageArea.textContent = 'Loading ad...';
-        disableAllAdButtons();
+        // Decrease energy & increase points
+        gameState.energy -= gameState.pointsPerTap;
+        gameState.points += gameState.pointsPerTap;
 
-        adController.show().then(result => {
-            console.log('AdsGram ad finished successfully.', result);
-            triggerReward('adsgram');
-        }).catch(error => {
-            console.error('AdsGram ad failed or was skipped:', error);
-            messageArea.textContent = "Ad was skipped. No points earned.";
-            resetAllButtonVisuals();
-        });
-    }
+        // Visual feedback
+        tapCircle.classList.add('tapped');
+        setTimeout(() => tapCircle.classList.remove('tapped'), 100);
 
-    function handleMonetagRewardedAd() {
-        if (viewMonetagRewardedAdBtn.disabled) return;
-        messageArea.textContent = 'Loading rewarded ad...';
-        disableAllAdButtons();
+        // Floating number effect
+        const x = event.clientX || event.touches[0].clientX;
+        const y = event.clientY || event.touches[0].clientY;
+        createFloatingNumber(x, y, `+${gameState.pointsPerTap}`);
         
-        show_9678845().then(() => {
-            console.log('Monetag rewarded ad completed.');
-            triggerReward('monetag_rewarded');
-        }).catch(() => {
-            console.error('Monetag rewarded ad failed or was skipped.');
-            messageArea.textContent = "Rewarded ad skipped. No points.";
-            resetAllButtonVisuals();
-        });
-    }
-    
-    function disableAllAdButtons() {
-        [viewAdBtn, viewMonetagRewardedAdBtn].forEach(btn => {
-            btn.disabled = true;
-            btn.classList.add('btn-disabled');
-            btn.classList.remove('btn-grad-green', 'btn-grad-purple');
-        });
+        updateUI();
+
+        // TODO: Batch updates to the server instead of on every tap
     }
 
-    function resetAllButtonVisuals() {
-        [viewAdBtn, viewMonetagRewardedAdBtn].forEach(btn => btn.disabled = false);
-        viewAdBtn.classList.remove('btn-disabled');
-        viewAdBtn.classList.add('btn-grad-green');
-        viewMonetagRewardedAdBtn.classList.remove('btn-disabled');
-        viewMonetagRewardedAdBtn.classList.add('btn-grad-purple');
-    }
+    function createFloatingNumber(x, y, text) {
+        const numberEl = document.createElement('div');
+        numberEl.className = 'floating-number';
+        numberEl.textContent = text;
+        numberEl.style.left = `${x}px`;
+        numberEl.style.top = `${y}px`;
+        
+        document.body.appendChild(numberEl);
 
-    function startGlobalCooldownTimer(initialRemaining) {
-        clearInterval(globalCooldownInterval);
-        let remaining = Math.ceil(initialRemaining);
-        disableAllAdButtons();
+        setTimeout(() => {
+            numberEl.style.transform = 'translateY(-100px) scale(1.2)';
+            numberEl.style.opacity = '0';
+        }, 10);
 
-        globalCooldownInterval = setInterval(() => {
-            if (remaining > 0) {
-                messageArea.textContent = `Next ad bonus in ${remaining}s`;
-                remaining--;
-            } else {
-                clearInterval(globalCooldownInterval);
-                messageArea.textContent = 'Ad bonus is available now!';
-                resetAllButtonVisuals();
-            }
+        setTimeout(() => {
+            numberEl.remove();
         }, 1000);
     }
-    
-    function disableButton(btn, text) {
-        btn.textContent = text;
-        btn.disabled = true;
-        btn.classList.add('btn-disabled');
-        btn.classList.remove('btn-grad-green', 'btn-grad-purple', 'btn-grad-blue');
+
+    function showPage(pageId) {
+        pages.forEach(p => p.classList.add('hidden'));
+        document.getElementById(pageId)?.classList.remove('hidden');
+
+        navItems.forEach(item => {
+            item.classList.toggle('active', item.dataset.page === pageId);
+        });
     }
 
-    async function fetchData() {
-        try {
-            const response = await fetch(`${SERVER_URL}/api/data`);
-            if (!response.ok) throw new Error(`Network response: ${response.statusText}`);
-            const data = await response.json();
-            updateUI(data);
-        } catch (error) {
-            console.error('Failed to fetch initial data:', error);
-            messageArea.textContent = "Could not connect to server.";
+    // Energy regeneration
+    setInterval(() => {
+        if (gameState.energy < gameState.maxEnergy) {
+            gameState.energy += 1; // Regenerate 1 energy per second
+            updateUI();
         }
-    }
-    
-    function updateUI(data) {
-        balanceElement.textContent = data.balance.toFixed(2);
-        lifetimePointsElement.textContent = data.lifetime_points.toFixed(2);
-        renderHistory(data.history);
-        checkDailyBonusStatus(data.last_daily_bonus);
-        
-        const now = new Date().getTime() / 1000;
-        const timePassed = now - data.last_ad_time;
-        const cooldownSeconds = 30;
-        if (timePassed < cooldownSeconds) {
-            startGlobalCooldownTimer(cooldownSeconds - timePassed);
-        }
-    }
-    
-    function renderHistory(history) {
-        historyList.innerHTML = history.length === 0 ? `<p class="text-gray-500 text-center">No transactions.</p>` :
-            history.map(tx => `<div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-lg"><div><p class="font-semibold">${tx.type}</p><p class="text-xs text-gray-400">${new Date(tx.date).toLocaleString()}</p></div><p class="font-bold text-green-400">+${tx.amount.toFixed(2)}</p></div>`).join('');
-    }
+    }, 1000);
 
-    async function handleDailyBonus() {
-        try {
-            const response = await fetch(`${SERVER_URL}/api/daily_bonus`, { method: 'POST' });
-            const data = await response.json();
-            if (response.ok) {
-                bonusMessage.textContent = data.message;
-                fetchData();
-            } else {
-                bonusMessage.textContent = data.error;
-            }
-        } catch (error) { bonusMessage.textContent = "Server error."; }
-    }
 
-    function checkDailyBonusStatus(lastClaimISO) {
-        const lastClaimDate = lastClaimISO ? new Date(lastClaimISO).toDateString() : null;
-        const today = new Date().toDateString();
-        dailyBonusBtn.disabled = lastClaimDate === today;
-        dailyBonusBtn.classList.toggle('btn-disabled', lastClaimDate === today);
-    }
-
-    // --- Event Listeners & Initial Setup ---
-    navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
-    viewAdBtn.addEventListener('click', handleViewAd);
-    viewMonetagRewardedAdBtn.addEventListener('click', handleMonetagRewardedAd);
-    dailyBonusBtn.addEventListener('click', handleDailyBonus);
-    
+    // --- Initial Setup ---
     window.addEventListener('load', () => {
-        if(typeof Telegram !== 'undefined') Telegram.WebApp.ready();
-        fetchData();
-        initializeAdsGram();
-        disableButton(viewMonetagAdBtn, '💎 For Pop-ups Only');
+        if (typeof Telegram !== 'undefined') {
+            Telegram.WebApp.ready();
+            const user = Telegram.WebApp.initDataUnsafe?.user;
+            if (user) gameState.userId = user.id;
+        }
+
+        // Initialize UI
+        updateUI();
+
+        // Initialize Bottom Nav Slider
+        const swiper = new Swiper('.bottom-nav-slider', {
+            slidesPerView: 4, // Show 4 items
+            spaceBetween: 10,
+            centeredSlides: false, 
+        });
+
+        // Add event listeners
+        tapCircle.addEventListener('click', handleTap);
+        // For mobile touch
+        tapCircle.addEventListener('touchstart', e => e.preventDefault()); // Prevent zoom
+        tapCircle.addEventListener('touchend', handleTap);
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                showPage(item.dataset.page);
+            });
+        });
+
+        // Set the initial active state for the nav
+        showPage('earnPage'); 
     });
-    </script>
+</script>
+
 </body>
 </html>

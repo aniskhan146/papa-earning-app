@@ -1,113 +1,88 @@
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# --- অ্যাপ সেটআপ ---
+# --- App Setup ---
 app = Flask(__name__)
-CORS(app)  # ফ্রন্টএন্ডকে অ্যাক্সেস দেওয়ার জন্য
+CORS(app)
 
-# --- ইন-মেমোরি ডেটাবেস (শুধুমাত্র ডেমোর জন্য) ---
-# একটি বাস্তব অ্যাপ্লিকেশনে এখানে PostgreSQL, MongoDB বা Redis ব্যবহার করা উচিত।
-# Render-এর ফ্রি সার্ভার রিস্টার্ট হলে এই ডেটা রিসেট হয়ে যাবে।
-user_data = {
-    'balance': 15.75,
-    'lifetime_points': 150.25,
-    'last_ad_time': 0,  # UNIX timestamp for cooldown
-    'last_daily_bonus': None,  # ISO format string date
-    'history': [
-        {'type': 'Initial Bonus', 'amount': 10.00, 'date': '2023-10-27T10:00:00Z'},
-        {'type': 'Ad Reward', 'amount': 5.75, 'date': '2023-10-27T11:30:00Z'},
-    ]
+# --- Demo Database (will reset on server restart) ---
+# For a real app, use PostgreSQL or Redis on Render
+user_data_db = {
+    # Default data for a guest user
+    'guest_user': {
+        'points': 1250.0,
+        'coins': 5700000,
+        'energy': 500,
+        'maxEnergy': 500,
+        'last_energy_update': datetime.now().timestamp(),
+        'league': 'Gold'
+    }
 }
 
-# --- পুরস্কারের পরিমাণ ---
-REWARDS = {
-    'adsgram': 2.50,
-    'monetag_rewarded': 5.00,
-    'monetag_interstitial': 1.25,
-    'daily_bonus': 25.00
-}
+# Helper function to get user data safely
+def get_user_data(user_id):
+    if user_id not in user_data_db:
+        # Create a new user with default values if not exists
+        user_data_db[user_id] = {
+            'points': 0.0, 'coins': 0, 'energy': 500, 'maxEnergy': 500,
+            'last_energy_update': datetime.now().timestamp(), 'league': 'Bronze'
+        }
+    return user_data_db[user_id]
 
-# ৩০ সেকেন্ডের গ্লোবাল কুলডাউন
-AD_COOLDOWN_SECONDS = 30
-
-# --- API রুটস ---
+# --- API Routes ---
 
 @app.route('/')
 def home():
-    """সার্ভার চলছে কিনা তা নিশ্চিত করার জন্য মূল রুট"""
-    return "PAPA Earning API is running successfully!"
+    """Confirms the server is running."""
+    return "PAPA TAP Game API is live!"
 
-@app.route('/api/data', methods=['GET'])
-def get_user_data():
-    """ব্যবহারকারীর সমস্ত ডেটা প্রদান করে"""
+@app.route('/api/user_data/<user_id>', methods=['GET'])
+def get_full_user_data(user_id):
+    """Provides all game data for a specific user."""
+    user_data = get_user_data(user_id)
+    
+    # Regenerate energy based on time passed
+    now = datetime.now().timestamp()
+    time_passed = now - user_data['last_energy_update']
+    energy_to_add = int(time_passed) # 1 energy per second
+    
+    current_energy = min(user_data['maxEnergy'], user_data['energy'] + energy_to_add)
+    user_data['energy'] = current_energy
+    user_data['last_energy_update'] = now
+    
     return jsonify(user_data)
 
-@app.route('/api/reward', methods=['POST'])
-def grant_reward():
-    """বিজ্ঞাপন দেখার জন্য ব্যবহারকারীকে পুরস্কৃত করে"""
-    global user_data
-
-    # কুলডাউন চেক করা
-    current_time = datetime.now().timestamp()
-    time_since_last_ad = current_time - user_data['last_ad_time']
+@app.route('/api/tap', methods=['POST'])
+def record_tap():
+    """Records user taps and updates points."""
+    req_data = request.json
+    user_id = req_data.get('userId', 'guest_user')
+    taps_count = req_data.get('taps', 0)
     
-    if time_since_last_ad < AD_COOLDOWN_SECONDS:
-        remaining_time = AD_COOLDOWN_SECONDS - time_since_last_ad
-        return jsonify({'error': f'Please wait {int(remaining_time)} more seconds'}), 429 # 429 = Too Many Requests
+    if taps_count == 0:
+        return jsonify({'error': 'No taps recorded'}), 400
 
-    # পুরস্কার যোগ করা
-    data = request.json
-    ad_type = data.get('type')
+    user_data = get_user_data(user_id)
+
+    # Simple logic: 1 tap = 1 point. Assumes client manages energy.
+    user_data['points'] += taps_count
+    user_data['energy'] -= taps_count
     
-    if ad_type not in REWARDS:
-        return jsonify({'error': 'Invalid reward type'}), 400
+    # Ensure energy doesn't go below zero
+    if user_data['energy'] < 0: user_data['energy'] = 0
 
-    amount = REWARDS[ad_type]
-    user_data['balance'] += amount
-    user_data['lifetime_points'] += amount
-    user_data['last_ad_time'] = current_time
-
-    # ইতিহাস যুক্ত করা
-    user_data['history'].insert(0, {
-        'type': f'{ad_type.replace("_", " ").title()} Reward',
-        'amount': amount,
-        'date': datetime.utcnow().isoformat() + 'Z'
-    })
-
+    user_data['last_energy_update'] = datetime.now().timestamp()
+    
     return jsonify({
-        'message': f'Successfully rewarded {amount} points!',
-        'new_balance': user_data['balance']
+        'message': f'{taps_count} taps recorded successfully!',
+        'new_points': user_data['points'],
+        'new_energy': user_data['energy']
     })
 
-@app.route('/api/daily_bonus', methods=['POST'])
-def claim_daily_bonus():
-    """প্রতি ২৪ ঘণ্টায় একবার ডেইলি বোনাস প্রদান করে"""
-    global user_data
-    
-    today_str = datetime.utcnow().date().isoformat()
-    
-    if user_data['last_daily_bonus'] == today_str:
-        return jsonify({'error': 'Daily bonus already claimed for today'}), 400
-        
-    amount = REWARDS['daily_bonus']
-    user_data['balance'] += amount
-    user_data['lifetime_points'] += amount
-    user_data['last_daily_bonus'] = today_str
+# You can later add more routes for Ads, Boosts, etc.
 
-    user_data['history'].insert(0, {
-        'type': 'Daily Bonus',
-        'amount': amount,
-        'date': datetime.utcnow().isoformat() + 'Z'
-    })
-
-    return jsonify({
-        'message': f'🎉 Congratulations! You have claimed your daily bonus of {amount} points!',
-        'new_balance': user_data['balance']
-    })
-
-# --- সার্ভার রান করা ---
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
