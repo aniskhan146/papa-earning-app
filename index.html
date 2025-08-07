@@ -4,277 +4,213 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>PAPA TAP Game</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Swiper.js for the slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; }
+        body { font-family: 'Poppins', sans-serif; overflow: hidden; }
         .tap-circle.tapped { transform: scale(0.95); }
-        .floating-number {
-            position: absolute;
-            font-size: 2rem;
-            font-weight: 800;
-            color: white;
-            opacity: 1;
-            transition: all 1s ease-out;
-            pointer-events: none;
-            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
-        }
+        .page { display: none; }
+        .page.active { display: block; }
+        .floating-number { position: absolute; font-size: 2.5rem; font-weight: 800; color: white; opacity: 1; transition: all 1s ease-out; pointer-events: none; text-shadow: 0px 2px 4px rgba(0,0,0,0.5); }
     </style>
 </head>
-<body class="bg-gradient-to-t from-orange-500 to-yellow-400 text-white select-none">
+<body class="bg-gradient-to-t from-orange-600 to-yellow-500 text-white select-none">
 
-<div id="app-container" class="flex flex-col h-screen max-w-md mx-auto bg-gray-900/50 backdrop-blur-sm">
-    
-    <!-- MAIN EARN PAGE -->
+<div id="app-container" class="flex flex-col h-screen max-w-md mx-auto bg-gray-900/70 backdrop-blur-md">
+
+    <!-- EARN PAGE -->
     <div id="earnPage" class="page active flex-grow flex flex-col p-4 space-y-4 overflow-hidden">
-        
-        <!-- Top Currency Bar -->
-        <header class="flex items-center justify-between space-x-2 bg-black/20 p-2 rounded-xl">
-            <div class="flex items-center space-x-2">
-                <img src="https://img.icons8.com/plasticine/100/token-pivx.png" alt="coin" class="w-8 h-8">
-                <div>
-                    <p class="text-xs text-gray-300">Points</p>
-                    <p id="pointsBalance" class="font-bold text-lg">1,250</p>
-                </div>
-            </div>
-             <div class="flex items-center space-x-2">
-                <img src="https://img.icons8.com/fluency/48/stack-of-coins.png" alt="coin" class="w-8 h-8">
-                <div>
-                    <p class="text-xs text-gray-300">Coins</p>
-                    <p id="coinsBalance" class="font-bold text-lg">5.7M</p>
-                </div>
-            </div>
-             <div class="flex items-center space-x-2">
-                <img src="https://img.icons8.com/color/48/us-dollar-circled--v1.png" alt="usdt" class="w-8 h-8">
-                <div>
-                    <p class="text-xs text-gray-300">USDT</p>
-                    <p id="usdtBalance" class="font-bold text-lg">0.00</p>
-                </div>
-            </div>
+        <header class="flex items-center justify-around space-x-2 bg-black/30 p-2 rounded-2xl">
+            <div class="flex items-center space-x-1.5"><img src="https://img.icons8.com/fluency/48/stack-of-coins.png" class="w-8 h-8"><p id="coinBalance" class="font-bold text-lg">0</p></div>
+            <div class="flex items-center space-x-1.5"><img src="https://img.icons8.com/color/48/us-dollar-circled--v1.png" class="w-8 h-8"><p id="usdtBalance" class="font-bold text-lg">0.00</p></div>
+            <div class="flex items-center space-x-1.5"><img src="https://img.icons8.com/external-flat-icons-pack-amoled/64/external-diamond-crypto-and-currency-flat-icons-pack-amoled-2.png" class="w-8 h-8"><p id="tonBalance" class="font-bold text-lg">0.00</p></div>
         </header>
 
-        <!-- League & Ads to Earn -->
-        <section class="flex justify-between items-center">
-            <button type="button" class="bg-gray-800/80 px-4 py-2 rounded-lg font-semibold flex items-center space-x-2">
-                <img src="https://img.icons8.com/arcade/64/trophy.png" class="w-6 h-6" alt="trophy"/>
-                <span id="leagueName">Gold League</span>
-            </button>
-            <button type="button" onclick="showPage('adsPage')" class="bg-red-600 px-4 py-2 rounded-lg font-semibold">Ads to Earn</button>
-        </section>
-
-        <!-- Main Tap Area -->
         <main id="tap-area" class="flex-grow flex flex-col items-center justify-center relative">
-            <div id="tap-circle" class="tap-circle w-64 h-64 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center shadow-2xl transition-transform duration-75 ease-in-out">
+            <div id="tap-circle" class="tap-circle w-64 h-64 bg-gradient-to-br from-red-600 to-orange-500 rounded-full flex items-center justify-center shadow-2xl transition-transform duration-75 ease-in-out">
                 <p class="text-4xl font-black">TAP!</p>
             </div>
         </main>
-
-        <!-- Energy Counter and Boost Button -->
-        <section class="flex items-center justify-between space-x-4">
-            <div class="flex items-center space-x-2">
-                <img src="https://img.icons8.com/stickers/100/lightning-bolt.png" alt="energy" class="w-10 h-10"/>
-                <div>
-                    <p id="energyCounter" class="text-2xl font-bold">500</p>
-                    <p class="text-xs text-gray-200">/ 500</p>
-                </div>
-            </div>
-            <button type="button" class="bg-red-500 hover:bg-red-600 font-bold py-3 px-8 rounded-full shadow-lg">🚀 Boost</button>
-        </section>
-
+        
+        <section class="flex items-center justify-between space-x-4"><div class="flex items-center space-x-2"><img src="https://img.icons8.com/stickers/100/lightning-bolt.png" alt="energy" class="w-10 h-10"/><div class="pt-2"><p id="energyCounter" class="text-2xl font-bold leading-none">500 / 500</p></div></div>
+        <button type="button" class="bg-red-500 hover:bg-red-600 font-bold py-3 px-8 rounded-full shadow-lg">🚀 Boost</button></section>
     </div>
 
-    <!-- ADS PAGE -->
-    <div id="adsPage" class="page hidden flex-grow flex flex-col p-4 items-center justify-center">
-        <h1 class="text-3xl font-bold mb-8">Watch Ads to Earn</h1>
-        <p class="mb-6">Watch a rewarded ad to earn more points!</p>
-        <button type="button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg">Watch Rewarded Ad</button>
-        <button type="button" onclick="showPage('earnPage')" class="mt-8 text-gray-300">Go Back</button>
+    <!-- TASK PAGE -->
+    <div id="taskPage" class="page flex-grow flex flex-col p-4 overflow-y-auto">
+        <h1 class="text-3xl font-bold text-center mb-6">Tasks</h1>
+        <div id="taskList" class="space-y-3"></div>
+        <p id="taskMessage" class="text-center mt-4 text-green-400"></p>
     </div>
 
-    <!-- TASK/PROFILE PAGES (Future use) -->
-    <div id="taskPage" class="page hidden flex-grow flex flex-col p-4 items-center justify-center">
-        <h1 class="text-3xl font-bold">Tasks are coming soon!</h1>
-        <button type="button" onclick="showPage('earnPage')" class="mt-8 text-gray-300">Go Back</button>
-    </div>
-    <div id="profilePage" class="page hidden flex-grow flex flex-col p-4 items-center justify-center">
-        <h1 class="text-3xl font-bold">Profile page is under construction!</h1>
-        <button type="button" onclick="showPage('earnPage')" class="mt-8 text-gray-300">Go Back</button>
-    </div>
-
-
-    <!-- Bottom Navigation Slider -->
-    <footer class="bg-black/50 p-2">
-        <div class="swiper bottom-nav-slider">
-            <div class="swiper-wrapper">
-                <div class="swiper-slide nav-item" data-page="earnPage">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 12.592a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21.129 11.238a9.141 9.141 0 1 0-11.832 9.043 8.852 8.852 0 0 1 2.94-.908 6.784 6.784 0 0 0 5.483-3.056 6.732 6.732 0 0 0-.214-7.238Z"></path></svg>
-                    <span>Earn</span>
-                </div>
-                <div class="swiper-slide nav-item" data-page="adsPage">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.235a.375.375 0 0 1-.541-.328V8.765a.375.375 0 0 1 .541-.328l5.603 3.235Z"></path></svg>
-                    <span>Ads</span>
-                </div>
-                <div class="swiper-slide nav-item" data-page="taskPage">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836A8.995 8.995 0 0 1 12 3c5.523 0 10 2.239 10 5s-4.477 5-10 5-10-2.239-10-5c0-1.294.613-2.484 1.583-3.327"></path><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a2 2 0 0 1-2-2v-6m4 8a2 2 0 0 0-2-2v-6m0 0a2 2 0 1 0-4 0v6a2 2 0 0 0 2 2m4 0a2 2 0 0 1 2-2v-6m0 0a2 2 0 1 1-4 0v6a2 2 0 0 1 2 2m-8-2.923A8.963 8.963 0 0 1 2.417 11.75 8.963 8.963 0 0 1 2 11c0-2.203 2.898-4.148 7-4.836"></path></svg>
-                    <span>Task</span>
-                </div>
-                <div class="swiper-slide nav-item" data-page="profilePage">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75a17.933 17.933 0 0 1-7.499-1.632Z"></path></svg>
-                    <span>Profile</span>
-                </div>
+    <!-- PROFILE PAGE -->
+    <div id="profilePage" class="page flex-grow flex flex-col p-4 space-y-6">
+        <div class="text-center">
+            <img id="profileAvatar" src="https://img.icons8.com/fluency/96/user-male-circle--v1.png" class="w-24 h-24 rounded-full mx-auto border-4 border-yellow-400">
+            <h1 id="profileName" class="text-2xl font-bold mt-3">Player Name</h1>
+            <div class="inline-flex items-center space-x-2 bg-gray-800 px-4 py-1 rounded-full mt-2">
+                <img src="https://img.icons8.com/arcade/64/trophy.png" class="w-5 h-5" alt="trophy"/>
+                <span id="profileLeague" class="font-semibold text-sm">Gold League</span>
             </div>
         </div>
-        <style>
-            .nav-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                color: #9ca3af;
-                padding: 4px 0;
-                cursor: pointer;
-                transition: color 0.3s;
-                width: 25% !important; /* Forces 4 items to be visible */
-            }
-            .nav-item:hover, .nav-item.active {
-                color: #ffffff;
-            }
-            .nav-item.active { transform: scale(1.1); }
-            .nav-item span { font-size: 0.7rem; font-weight: 500; }
-        </style>
+        <div class="bg-black/30 p-4 rounded-xl space-y-3">
+            <h2 class="font-bold text-lg text-yellow-300">Your Balances</h2>
+            <div class="flex justify-between items-center"><span class="text-gray-300">COIN Balance</span><span id="profileCoin" class="font-bold">0</span></div>
+            <div class="flex justify-between items-center"><span class="text-gray-300">USDT Balance</span><span id="profileUSDT" class="font-bold">0.00</span></div>
+            <div class="flex justify-between items-center"><span class="text-gray-300">TON Balance</span><span id="profileTON" class="font-bold">0.00</span></div>
+        </div>
+        <button type="button" id="withdrawBtn" class="w-full bg-green-600 hover:bg-green-700 font-bold py-3 rounded-lg text-lg">💸 Withdraw</button>
+    </div>
+
+    <footer class="bg-black/50 p-2">
+        <div class="swiper bottom-nav-slider">
+            <div class="swiper-wrapper" id="navWrapper"></div>
+        </div>
+        <style>.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9ca3af;padding:4px 0;cursor:pointer;transition:all 0.3s;width:33.33%!important}.nav-item:hover,.nav-item.active{color:#fff}.nav-item.active{transform:scale(1.1)}.nav-item span{font-size:.7rem;font-weight:500}</style>
     </footer>
 </div>
 
-
 <script>
-    // --- Configuration & State ---
-    const SERVER_URL = 'https://papa-earning-app.onrender.com'; // Your Render URL
-    let gameState = {
-        userId: 'guest_user',
-        points: 1250,
-        coins: 5700000,
-        energy: 500,
-        maxEnergy: 500,
-        pointsPerTap: 1
-    };
+    const SERVER_URL = 'https://papa-earning-app.onrender.com';
+    let gameState = {};
+    let tgUser = {};
+    const TASKS = { "task1": { "coins": 50000, "usdt": 0.1, "title": "Join our Community" }, "task2": { "coins": 100000, "usdt": 0.0, "title": "Follow us on X" }};
 
-    // --- DOM Elements ---
-    const pointsBalanceEl = document.getElementById('pointsBalance');
-    const coinsBalanceEl = document.getElementById('coinsBalance');
-    const energyCounterEl = document.getElementById('energyCounter');
-    const tapCircle = document.getElementById('tap-circle');
-    const tapArea = document.getElementById('tap-area');
-    const pages = document.querySelectorAll('.page');
-    const navItems = document.querySelectorAll('.nav-item');
+    const navItemsConfig = [
+        { id: 'earnPage', label: 'Earn', icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 12.592a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21.129 11.238a9.141 9.141 0 1 0-11.832 9.043 8.852 8.852 0 0 1 2.94-.908 6.784 6.784 0 0 0 5.483-3.056 6.732 6.732 0 0 0-.214-7.238Z"></path></svg>`},
+        { id: 'taskPage', label: 'Task', icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836A8.995 8.995 0 0 1 12 3c5.523 0 10 2.239 10 5s-4.477 5-10 5-10-2.239-10-5c0-1.294.613-2.484 1.583-3.327"></path><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a2 2 0 0 1-2-2v-6m4 8a2 2 0 0 0-2-2v-6m0 0a2 2 0 1 0-4 0v6a2 2 0 0 0 2 2m4 0a2 2 0 0 1 2-2v-6m0 0a2 2 0 1 1-4 0v6a2 2 0 0 1 2 2m-8-2.923A8.963 8.963 0 0 1 2.417 11.75 8.963 8.963 0 0 1 2 11c0-2.203 2.898-4.148 7-4.836"></path></svg>`},
+        { id: 'profilePage', label: 'Profile', icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75a17.933 17.933 0 0 1-7.499-1.632Z"></path></svg>`}
+    ];
 
-    // --- Core Functions ---
-
-    function updateUI() {
-        pointsBalanceEl.textContent = Math.floor(gameState.points).toLocaleString();
-        coinsBalanceEl.textContent = (gameState.coins / 1000000).toFixed(1) + 'M';
-        energyCounterEl.textContent = gameState.energy;
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId)?.classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.page === pageId));
+    }
+    
+    function formatNumber(num) {
+        if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + 'B';
+        if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
+        if (num >= 1_000) return (num / 1_000).toFixed(1) + 'K';
+        return Math.floor(num).toString();
     }
 
-    function handleTap(event) {
-        if (gameState.energy <= 0) return;
-
-        // Decrease energy & increase points
-        gameState.energy -= gameState.pointsPerTap;
-        gameState.points += gameState.pointsPerTap;
-
-        // Visual feedback
-        tapCircle.classList.add('tapped');
-        setTimeout(() => tapCircle.classList.remove('tapped'), 100);
-
-        // Floating number effect
-        const x = event.clientX || event.touches[0].clientX;
-        const y = event.clientY || event.touches[0].clientY;
-        createFloatingNumber(x, y, `+${gameState.pointsPerTap}`);
-        
-        updateUI();
-
-        // TODO: Batch updates to the server instead of on every tap
+    function updateAllUI() {
+        coinBalance.textContent = formatNumber(gameState.balance.coins);
+        usdtBalance.textContent = gameState.balance.usdt.toFixed(2);
+        tonBalance.textContent = gameState.balance.ton.toFixed(2);
+        energyCounter.textContent = `${Math.floor(gameState.energy.current)} / ${gameState.energy.max}`;
+        profileName.textContent = gameState.profile.name;
+        profileLeague.textContent = gameState.profile.league;
+        profileCoin.textContent = formatNumber(gameState.balance.coins);
+        profileUSDT.textContent = gameState.balance.usdt.toFixed(2);
+        profileTON.textContent = gameState.balance.ton.toFixed(2);
     }
-
-    function createFloatingNumber(x, y, text) {
+    
+    function createFloatingNumber(e, text) {
+        const x = e.clientX || e.touches[0].clientX;
+        const y = e.clientY || e.touches[0].clientY;
         const numberEl = document.createElement('div');
         numberEl.className = 'floating-number';
         numberEl.textContent = text;
-        numberEl.style.left = `${x}px`;
-        numberEl.style.top = `${y}px`;
-        
+        numberEl.style.left = `${x}px`; numberEl.style.top = `${y}px`;
         document.body.appendChild(numberEl);
-
-        setTimeout(() => {
-            numberEl.style.transform = 'translateY(-100px) scale(1.2)';
-            numberEl.style.opacity = '0';
-        }, 10);
-
-        setTimeout(() => {
-            numberEl.remove();
-        }, 1000);
+        setTimeout(() => { numberEl.style.transform = 'translateY(-100px)'; numberEl.style.opacity = '0'; }, 10);
+        setTimeout(() => { numberEl.remove(); }, 1000);
     }
 
-    function showPage(pageId) {
-        pages.forEach(p => p.classList.add('hidden'));
-        document.getElementById(pageId)?.classList.remove('hidden');
-
-        navItems.forEach(item => {
-            item.classList.toggle('active', item.dataset.page === pageId);
+    function handleTap(e) {
+        if (gameState.energy.current <= 0) return;
+        const coinsPerTap = gameState.tap_stats.coins_per_tap;
+        gameState.energy.current -= coinsPerTap;
+        gameState.balance.coins += coinsPerTap;
+        document.getElementById('tap-circle').classList.add('tapped');
+        setTimeout(() => document.getElementById('tap-circle').classList.remove('tapped'), 100);
+        createFloatingNumber(e, `+${coinsPerTap}`);
+        updateAllUI();
+    }
+    
+    function renderTasks() {
+        const taskListEl = document.getElementById('taskList');
+        taskListEl.innerHTML = Object.entries(TASKS).map(([id, task]) => `
+            <div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold">${task.title}</h3>
+                    <p class="text-sm text-yellow-400">+${task.coins.toLocaleString()} COIN, +${task.usdt} USDT</p>
+                </div>
+                <button type="button" data-task-id="${id}" class="task-claim-btn bg-blue-600 hover:bg-blue-700 font-bold py-2 px-5 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed">Claim</button>
+            </div>
+        `).join('');
+        document.querySelectorAll('.task-claim-btn').forEach(btn => btn.addEventListener('click', handleCompleteTask));
+        updateCompletedTasksUI();
+    }
+    
+    function updateCompletedTasksUI() {
+        gameState.completed_tasks.forEach(taskId => {
+            const btn = document.querySelector(`.task-claim-btn[data-task-id="${taskId}"]`);
+            if (btn) { btn.textContent = 'Claimed'; btn.disabled = true; }
         });
     }
 
-    // Energy regeneration
+    async function handleCompleteTask(e) {
+        const button = e.target;
+        const taskId = button.dataset.taskId;
+        const taskMessage = document.getElementById('taskMessage');
+        taskMessage.textContent = 'Completing task...';
+
+        try {
+            const response = await fetch(`${SERVER_URL}/api/complete_task`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: tgUser.id || "default_user", taskId: taskId })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                gameState.balance = data.new_balance;
+                gameState.completed_tasks.push(taskId);
+                taskMessage.textContent = data.message;
+                updateAllUI();
+                updateCompletedTasksUI();
+            } else {
+                taskMessage.textContent = data.error;
+            }
+        } catch (error) { taskMessage.textContent = "Server Error!"; }
+    }
+    
+    window.addEventListener('load', async () => {
+        try { if (typeof Telegram !== 'undefined') { Telegram.WebApp.ready(); tgUser = Telegram.WebApp.initDataUnsafe?.user || {}; }
+        } catch(e){ console.warn("Not in Telegram environment."); }
+
+        try {
+            const response = await fetch(`${SERVER_URL}/api/data/${tgUser.id || 'default_user'}`);
+            gameState = await response.json();
+            gameState.profile.name = tgUser.first_name ? `${tgUser.first_name} ${tgUser.last_name || ''}`.trim() : 'PAPA Player';
+        } catch(e) { console.error("Failed to load server data:", e); alert("Could not connect to server!"); }
+        
+        // Dynamic Nav
+        const navWrapper = document.getElementById('navWrapper');
+        navWrapper.innerHTML = navItemsConfig.map(item => `<div class="swiper-slide nav-item" data-page="${item.id}">${item.icon}<span>${item.label}</span></div>`).join('');
+        new Swiper('.bottom-nav-slider', { slidesPerView: 3, centeredSlides: true });
+        
+        // Listeners
+        document.getElementById('tap-circle').addEventListener('click', handleTap);
+        document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => showPage(item.dataset.page)));
+        document.getElementById('withdrawBtn').addEventListener('click', () => alert('Withdrawal system is coming soon!'));
+        
+        renderTasks();
+        updateAllUI();
+        showPage('earnPage');
+    });
+
     setInterval(() => {
-        if (gameState.energy < gameState.maxEnergy) {
-            gameState.energy += 1; // Regenerate 1 energy per second
-            updateUI();
+        if (gameState?.energy?.current < gameState?.energy?.max) {
+            gameState.energy.current += 1;
+            document.getElementById('energyCounter').textContent = `${Math.floor(gameState.energy.current)} / ${gameState.energy.max}`;
         }
     }, 1000);
-
-
-    // --- Initial Setup ---
-    window.addEventListener('load', () => {
-        if (typeof Telegram !== 'undefined') {
-            Telegram.WebApp.ready();
-            const user = Telegram.WebApp.initDataUnsafe?.user;
-            if (user) gameState.userId = user.id;
-        }
-
-        // Initialize UI
-        updateUI();
-
-        // Initialize Bottom Nav Slider
-        const swiper = new Swiper('.bottom-nav-slider', {
-            slidesPerView: 4, // Show 4 items
-            spaceBetween: 10,
-            centeredSlides: false, 
-        });
-
-        // Add event listeners
-        tapCircle.addEventListener('click', handleTap);
-        // For mobile touch
-        tapCircle.addEventListener('touchstart', e => e.preventDefault()); // Prevent zoom
-        tapCircle.addEventListener('touchend', handleTap);
-
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                showPage(item.dataset.page);
-            });
-        });
-
-        // Set the initial active state for the nav
-        showPage('earnPage'); 
-    });
 </script>
 
 </body>

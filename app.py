@@ -3,85 +3,89 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime
 
-# --- App Setup ---
+# --- অ্যাপ সেটআপ ---
 app = Flask(__name__)
 CORS(app)
 
-# --- Demo Database (will reset on server restart) ---
-# For a real app, use PostgreSQL or Redis on Render
-user_data_db = {
-    # Default data for a guest user
-    'guest_user': {
-        'points': 1250.0,
-        'coins': 5700000,
-        'energy': 500,
-        'maxEnergy': 500,
-        'last_energy_update': datetime.now().timestamp(),
-        'league': 'Gold'
+# --- ডেমো ডেটাবেস (সার্ভার রিস্টার্ট হলে ডেটা রিসেট হবে) ---
+user_database = {
+    "default_user": {
+        "profile": {"name": "PAPA Player", "league": "Bronze"},
+        "balance": {"coins": 125000.0, "usdt": 0.0, "ton": 0.0},
+        "energy": {"current": 500, "max": 500, "last_updated": datetime.now().timestamp()},
+        "tap_stats": {"coins_per_tap": 1},
+        "completed_tasks": []
     }
 }
 
-# Helper function to get user data safely
-def get_user_data(user_id):
-    if user_id not in user_data_db:
-        # Create a new user with default values if not exists
-        user_data_db[user_id] = {
-            'points': 0.0, 'coins': 0, 'energy': 500, 'maxEnergy': 500,
-            'last_energy_update': datetime.now().timestamp(), 'league': 'Bronze'
-        }
-    return user_data_db[user_id]
+# --- টাস্কের তালিকা এবং পুরস্কার ---
+TASKS = {
+    "task1": {"coins": 50000, "usdt": 0.1, "title": "Join our Community"},
+    "task2": {"coins": 100000, "usdt": 0.0, "title": "Follow us on X"},
+}
 
-# --- API Routes ---
+def get_user(user_id):
+    if user_id not in user_database:
+        # নতুন ব্যবহারকারী তৈরি
+        user_database[user_id] = user_database["default_user"].copy() 
+    return user_database[user_id]
+
+# --- API রুটস ---
 
 @app.route('/')
 def home():
-    """Confirms the server is running."""
-    return "PAPA TAP Game API is live!"
+    return "PAPA TAP Game API v2 is running!"
 
-@app.route('/api/user_data/<user_id>', methods=['GET'])
-def get_full_user_data(user_id):
-    """Provides all game data for a specific user."""
-    user_data = get_user_data(user_id)
+@app.route('/api/data/<user_id>', methods=['GET'])
+def get_game_data(user_id):
+    user = get_user(user_id)
+    # শক্তি পুনরুৎপাদন
+    time_passed = datetime.now().timestamp() - user["energy"]["last_updated"]
+    energy_to_add = int(time_passed)  # প্রতি সেকেন্ডে ১ এনার্জি
+    user["energy"]["current"] = min(user["energy"]["max"], user["energy"]["current"] + energy_to_add)
+    user["energy"]["last_updated"] = datetime.now().timestamp()
     
-    # Regenerate energy based on time passed
-    now = datetime.now().timestamp()
-    time_passed = now - user_data['last_energy_update']
-    energy_to_add = int(time_passed) # 1 energy per second
-    
-    current_energy = min(user_data['maxEnergy'], user_data['energy'] + energy_to_add)
-    user_data['energy'] = current_energy
-    user_data['last_energy_update'] = now
-    
-    return jsonify(user_data)
+    return jsonify(user)
 
 @app.route('/api/tap', methods=['POST'])
-def record_tap():
-    """Records user taps and updates points."""
-    req_data = request.json
-    user_id = req_data.get('userId', 'guest_user')
-    taps_count = req_data.get('taps', 0)
+def process_taps():
+    data = request.json
+    user_id = data.get("userId", "default_user")
+    tap_count = data.get("taps", 0)
+    user = get_user(user_id)
     
-    if taps_count == 0:
-        return jsonify({'error': 'No taps recorded'}), 400
-
-    user_data = get_user_data(user_id)
-
-    # Simple logic: 1 tap = 1 point. Assumes client manages energy.
-    user_data['points'] += taps_count
-    user_data['energy'] -= taps_count
-    
-    # Ensure energy doesn't go below zero
-    if user_data['energy'] < 0: user_data['energy'] = 0
-
-    user_data['last_energy_update'] = datetime.now().timestamp()
+    earned_coins = tap_count * user["tap_stats"]["coins_per_tap"]
+    user["balance"]["coins"] += earned_coins
+    user["energy"]["current"] -= tap_count # প্রতিটি ট্যাপে ১ এনার্জি খরচ
+    if user["energy"]["current"] < 0: user["energy"]["current"] = 0
     
     return jsonify({
-        'message': f'{taps_count} taps recorded successfully!',
-        'new_points': user_data['points'],
-        'new_energy': user_data['energy']
+        "message": f"Earned {earned_coins} coins!",
+        "new_coins": user["balance"]["coins"],
+        "new_energy": user["energy"]["current"]
     })
 
-# You can later add more routes for Ads, Boosts, etc.
+@app.route('/api/complete_task', methods=['POST'])
+def complete_task():
+    data = request.json
+    user_id = data.get("userId", "default_user")
+    task_id = data.get("taskId")
+    user = get_user(user_id)
+
+    if task_id not in TASKS:
+        return jsonify({"error": "Invalid Task ID"}), 400
+    if task_id in user["completed_tasks"]:
+        return jsonify({"error": "Task already completed"}), 400
+
+    reward = TASKS[task_id]
+    user["balance"]["coins"] += reward.get("coins", 0)
+    user["balance"]["usdt"] += reward.get("usdt", 0)
+    user["completed_tasks"].append(task_id)
+
+    return jsonify({
+        "message": "Task completed successfully!",
+        "new_balance": user["balance"]
+    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
