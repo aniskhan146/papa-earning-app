@@ -14,16 +14,7 @@
         body { font-family: 'Poppins', sans-serif; overflow: hidden; background-color: #1a1a2e; }
         #preloader { transition: opacity 0.5s ease-in-out; }
         main { position: relative; }
-        .page {
-            display: none;
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            flex-direction: column;
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(1.03);
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
+        .page { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; opacity: 0; pointer-events: none; transform: scale(1.03); transition: opacity 0.3s ease, transform 0.3s ease; }
         .page.active { display: flex; opacity: 1; pointer-events: auto; transform: scale(1); }
         .tap-circle.tapped { transform: scale(0.95); }
         .tap-particle { position: absolute; width: 10px; height: 10px; background: radial-gradient(circle, #ffff96, #ffA50000 70%); border-radius: 50%; pointer-events: none; transition: transform 0.6s cubic-bezier(0.1,0.7,0.3,1), opacity 0.6s linear; }
@@ -57,7 +48,7 @@
     <div id="taskPage" class="page p-4 overflow-y-auto"><h1 class="text-3xl font-bold text-center mb-6">Complete Tasks</h1><div id="taskList" class="space-y-3"></div><p id="taskMessage" class="text-center mt-4 text-green-400"></p></div>
     <div id="profilePage" class="page p-4 items-center justify-center"><h1 class="text-3xl font-bold">Profile Page</h1><p class="mt-4">This section is coming soon!</p></div>
 </main>
-<footer class="bg-black/30 p-2 z-10"><div class="swiper bottom-nav-slider"><div class="swiper-wrapper" id="navWrapper"></div></div></footer>
+<footer class="bg-black/30 p-2 z-10"><div class="swiper bottom-nav-slider"><div class="swiper-wrapper" id="navWrapper"></div></div><style>.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9ca3af;padding:4px 0;cursor:pointer;transition:all .3s;width:25%!important}.nav-item.active,.nav-item:hover{color:#fff;transform:scale(1.1)}.nav-item span{font-size:.7rem;font-weight:500}</style></footer>
 </div>
 
 <script>
@@ -66,36 +57,120 @@
     let tgUser = {};
     let adCooldownInterval;
     const AD_COOLDOWN = 25;
-    const TASKS_DATA = { "task1": { "coins": 50000, "usdt": 0.1, "title": "Join Community" }, "task2": { "coins": 100000, "usdt": 0.0, "title": "Follow on X" } };
-    const ADS_TASKS = [ { id: "monetag_reward_1", title: "Monetag Rewarded Ad 1", icon: "📺", reward: "+0.00000551 USDT", status: "active" }, { id: "monetag_reward_2", title: "Monetag Rewarded Ad 2", icon: "✨", reward: "+0.00000551 USDT", status: "active" }, { id: "partner_ad_1", title: "New Partner Offer", icon: "🤝", reward: "SOON", status: "coming_soon" }, { id: "video_ad_1", title: "Watch Short Video", icon: "🎬", reward: "SOON", status: "coming_soon" }, { id: "special_promo", title: "Special Promo Ad", icon: "💎", reward: "SOON", status: "coming_soon" } ];
-    const navItemsConfig = [{id:"earnPage",label:"Earn",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>`},{id:"adsPage",label:"Ads",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path><path d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.235a.375.375 0 0 1-.541-.328V8.765a.375.375 0 0 1 .541-.328l5.603 3.235Z"></path></svg>`},{id:"taskPage",label:"Task",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M11.35 3.836A8.995 8.995 0 0 1 12 3c5.523 0 10 2.239 10 5s-4.477 5-10 5-10-2.239-10-5c0-1.294.613-2.484 1.583-3.327"></path><path d="M12 21a2 2 0 0 1-2-2v-6m4 8a2 2 0 0 0-2-2v-6m0 0a2 2 0 1 0-4 0v6a2 2 0 0 0 2 2m4 0a2 2 0 0 1 2-2v-6m0 0a2 2 0 1 1-4 0v6a2 2 0 0 1 2 2m-8-2.923A8.963 8.963 0 0 1 2.417 11.75 8.963 8.963 0 0 1 2 11c0-2.203 2.898-4.148 7-4.836"></path></svg>`},{id:"profilePage",label:"Profile",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75a17.933 17.933 0 0 1-7.499-1.632Z"></path></svg>`}];
     
-    function animateValue(e,t,a,s,l=e=>Math.floor(e)){if(t===a)return;let n=null;const c=i=>{n||(n=i);const o=Math.min((i-n)/s,1),r=o*(a-t)+t;e.innerHTML=l(r),o<1&&window.requestAnimationFrame(c)};window.requestAnimationFrame(c)}
-    function createTapParticles(e){const t=e.clientX||e.touches[0].clientX,a=e.clientY||e.touches[0].clientY;for(let e=0;e<8;e++){const s=document.createElement("div");s.className="tap-particle",document.body.appendChild(s);const l=2*Math.random()*Math.PI,n=40*Math.random()+30;s.style.left=`${t}px`,s.style.top=`${a}px`,setTimeout(()=>{s.style.transform=`translate(${Math.cos(l)*n}px,${Math.sin(l)*n}px) scale(0)`,s.style.opacity="0"},10),setTimeout(()=>s.remove(),610)}}
-    function showPage(e){const t=document.querySelector(".page.active"),a=document.getElementById(e);t&&a&&t.id!==a.id&&(t.classList.remove("active"),a.classList.add("active")),document.querySelectorAll(".nav-item").forEach(t=>{t.classList.toggle("active",t.dataset.page===e)})}
-    function formatNumber(e){return e>=1e6?(e/1e6).toFixed(2)+"M":e>=1e3?(e/1e3).toFixed(1)+"K":Math.floor(e).toString()}
-    function updateAllUI(){if(!gameState.balance)return;const e=document.getElementById("coinBalance"),t=document.getElementById("usdtBalance"),a=parseFloat(e.dataset.value)||0,s=parseFloat(t.dataset.value)||0;animateValue(e,a,gameState.balance.coins,500,formatNumber),animateValue(t,s,gameState.balance.usdt,500,e=>e.toFixed(8)),e.dataset.value=gameState.balance.coins,t.dataset.value=gameState.balance.usdt,document.getElementById("tonBalance").textContent=gameState.balance.ton.toFixed(2),document.getElementById("energyCounter").textContent=Math.floor(gameState.energy.current),document.getElementById("leagueName").textContent=gameState.profile.league}
-    function createFloatingNumber(e,t){const a=e.clientX||e.touches[0].clientX,s=e.clientY||e.touches[0].clientY,l=document.createElement("div");l.className="floating-number",l.textContent=t,l.style.left=`${a}px`,l.style.top=`${s}px`,document.body.appendChild(l),setTimeout(()=>{l.style.transform="translateY(-100px)",l.style.opacity="0"},10),setTimeout(()=>{l.remove()},1e3)}
-    function handleTap(e){if(gameState.energy.current<=0)return;createTapParticles(e);const t=gameState.tap_stats.coins_per_tap;gameState.energy.current-=t,gameState.balance.coins+=t,document.getElementById("tap-circle").classList.add("tapped"),setTimeout(()=>document.getElementById("tap-circle").classList.remove("tapped"),100),createFloatingNumber(e,`+${t}`),updateAllUI()}
-    function renderTasks(){const e=document.getElementById("taskList");e&&e.innerHTML?e.innerHTML=Object.entries(TASKS_DATA).map(([t,a])=>`<div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center"><div><h3 class="font-bold">${a.title}</h3><p class="text-sm text-yellow-400">+${a.coins.toLocaleString()} COIN, +${a.usdt} USDT</p></div><button type="button" data-task-id="${t}" class="task-claim-btn bg-blue-600 hover:bg-blue-700 font-bold py-2 px-5 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed">Claim</button></div>`).join(""):null,document.querySelectorAll(".task-claim-btn").forEach(t=>t.addEventListener("click",handleCompleteTask)),updateCompletedTasksUI()}
-    function updateCompletedTasksUI(){gameState.completed_tasks&&gameState.completed_tasks.forEach(e=>{const t=document.querySelector(`.task-claim-btn[data-task-id="${e}"]`);t&&(t.textContent="Claimed",t.disabled=!0)})}
-    async function handleCompleteTask(e){const t=e.target,a=t.dataset.taskId,s=document.getElementById("taskMessage");s.textContent="Completing task...";try{const e=await fetch(`${SERVER_URL}/api/complete_task`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:tgUser.id||"default_user",taskId:a})}),l=await e.json();e.ok?(gameState.balance=l.new_balance,gameState.completed_tasks.push(a),s.textContent=l.message,updateAllUI(),updateCompletedTasksUI()):s.textContent=l.error}catch(e){s.textContent="Server Error!"}}
-    function renderAdsTasks(){const e=document.getElementById("adTaskList");e&&e.innerHTML?e.innerHTML=ADS_TASKS.map(t=>`<div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center"><div class="flex items-center space-x-4"><span class="text-3xl">${t.icon}</span><div><h3 class="font-bold">${t.title}</h3><p class="text-sm text-yellow-400">${t.reward}</p></div></div><button type="button" data-task-id="${t.id}" class="ad-watch-btn font-bold py-2 px-5 rounded-lg ${"active"===t.status?"bg-blue-600 hover:bg-blue-700":"bg-gray-500 cursor-not-allowed"}" ${"active"!==t.status?"disabled":""}>${"active"===t.status?"Go":"Soon"}</button></div>`).join(""):null,document.querySelectorAll(".ad-watch-btn").forEach(t=>t.addEventListener("click",handleAdTaskClick))}
-    async function handleAdTaskClick(e){const t=e.target,a=t.dataset.a,s=document.getElementById("adTaskMessage");if(!a||t.disabled)return;s.textContent="Loading ad...";const l=document.querySelectorAll(".ad-watch-btn:not([disabled])");l.forEach(e=>e.disabled=!0),show_9678845().then(()=>{s.textContent="Ad watched! Claiming reward...",claimAdReward(a)}).catch(()=>{s.textContent="Ad skipped. No reward.",l.forEach(e=>e.disabled=!1)})}
-    async function claimAdReward(e){const t=document.getElementById("adTaskMessage");try{const a=await fetch(`${SERVER_URL}/api/reward_ad`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:tgUser.id||"default_user",adId:e})}),s=await a.json();a.ok?(t.textContent=s.message,gameState.balance=s.new_balance,gameState.last_ad_reward_time=s.last_ad_reward_time,updateAllUI(),startAdCooldown(AD_COOLDOWN)):(t.textContent=s.error,document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]').forEach(e=>e.disabled=!1))}catch(e){t.textContent="Server Error.",document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]').forEach(e=>e.disabled=!1)}}
-    function startAdCooldown(e){clearInterval(adCooldownInterval);let t=Math.ceil(e);const a=document.getElementById("adTaskMessage"),s=document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]');s.forEach(e=>e.disabled=!0),adCooldownInterval=setInterval(()=>{t>0?(a.textContent=`Next ad available in ${t}s`,t--):(clearInterval(adCooldownInterval),a.textContent="You can watch an ad now!",s.forEach(e=>e.disabled=!1))},1e3)}
-    setInterval(()=>{if(gameState?.energy?.current<gameState?.energy?.max){gameState.energy.current+=1;const e=document.getElementById("energyCounter");e&&(e.textContent=`${Math.floor(gameState.energy.current)}`)}},1e3);
+    // Default game state for offline/error cases
+    const defaultGameState = {"profile":{"name":"PAPA Player","league":"Bronze"},"balance":{"coins":0,"usdt":0,"ton":0},"energy":{"current":100,"max":100},"tap_stats":{"coins_per_tap":1},"completed_tasks":[], "last_ad_reward_time":0};
 
-    window.addEventListener('load', async ()=>{
-        try{if(typeof Telegram!=="undefined"){Telegram.WebApp.ready();tgUser=Telegram.WebApp.initDataUnsafe?.user||{}}}catch(e){console.warn("Not in Telegram env.")}
-        try{const e=await fetch(`${SERVER_URL}/api/data/${tgUser.id||"default_user"}`);if(!e.ok)throw new Error("Server not available");gameState=await e.json()}catch(e){return console.error("Server connection failed:",e),void alert("Could not connect to server!")}
-        gameState.profile.name=tgUser.first_name?`${tgUser.first_name} ${tgUser.last_name||""}`.trim():"PAPA Player";
-        const e=document.getElementById("navWrapper");e.innerHTML=navItemsConfig.map(t=>`<div class="swiper-slide nav-item" data-page="${t.id}">${t.icon}<span>${t.label}</span></div>`).join(""),new Swiper(".bottom-nav-slider",{slidesPerView:4,spaceBetween:10});
-        const t=Date.now()/1e3,a=t-(gameState.last_ad_reward_time||0);a<AD_COOLDOWN&&startAdCooldown(AD_COOLDOWN-a);
-        document.querySelectorAll(".nav-item").forEach(e=>e.addEventListener("click",()=>showPage(e.dataset.page))),document.getElementById("tap-circle").addEventListener("click",handleTap);
-        renderTasks();renderAdsTasks();updateAllUI();
-        showPage("earnPage");
-        const s=document.getElementById("preloader");s.style.opacity="0",setTimeout(()=>s.style.display="none",500)
+    const TASKS_DATA = {"task1":{"coins":5e4,"usdt":.1,"title":"Join Community"},"task2":{"coins":1e5,"usdt":0,"title":"Follow on X"}};
+    const ADS_TASKS=[{id:"monetag_reward_1",title:"Monetag Rewarded Ad 1",icon:"📺",reward:"+0.00000551 USDT",status:"active"},{id:"monetag_reward_2",title:"Monetag Rewarded Ad 2",icon:"✨",reward:"+0.00000551 USDT",status:"active"},{id:"partner_ad_1",title:"New Partner Offer",icon:"🤝",reward:"SOON",status:"coming_soon"},{id:"video_ad_1",title:"Watch Short Video",icon:"🎬",reward:"SOON",status:"coming_soon"},{id:"special_promo",title:"Special Promo Ad",icon:"💎",reward:"SOON",status:"coming_soon"}];
+    const navItemsConfig=[{id:"earnPage",label:"Earn",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>`},{id:"adsPage",label:"Ads",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path><path d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.235a.375.375 0 0 1-.541-.328V8.765a.375.375 0 0 1 .541-.328l5.603 3.235Z"></path></svg>`},{id:"taskPage",label:"Task",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M11.35 3.836A8.995 8.995 0 0 1 12 3c5.523 0 10 2.239 10 5s-4.477 5-10 5-10-2.239-10-5c0-1.294.613-2.484 1.583-3.327"></path><path d="M12 21a2 2 0 0 1-2-2v-6m4 8a2 2 0 0 0-2-2v-6m0 0a2 2 0 1 0-4 0v6a2 2 0 0 0 2 2m4 0a2 2 0 0 1 2-2v-6m0 0a2 2 0 1 1-4 0v6a2 2 0 0 1 2 2m-8-2.923A8.963 8.963 0 0 1 2.417 11.75 8.963 8.963 0 0 1 2 11c0-2.203 2.898-4.148 7-4.836"></path></svg>`},{id:"profilePage",label:"Profile",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75a17.933 17.933 0 0 1-7.499-1.632Z"></path></svg>`}];
+    
+    // সব জাভাস্ক্রিপ্ট ফাংশন নিচে দেওয়া হলো (এখন আর সংক্ষেপিত নয়)
+    
+    function animateValue(element, start, end, duration, formatFunc = (val) => Math.floor(val)) {
+        if (start === end) return;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            let currentValue = progress * (end - start) + start;
+            element.innerHTML = formatFunc(currentValue);
+            if (progress < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+    }
+    
+    function createTapParticles(event) {
+        const x = event.clientX || event.touches[0].clientX;
+        const y = event.clientY || event.touches[0].clientY;
+        for (let i = 0; i < 8; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'tap-particle';
+            document.body.appendChild(particle);
+            const angle = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * 60 + 30;
+            particle.style.left = `${x}px`; particle.style.top = `${y}px`;
+            setTimeout(() => { particle.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0)`; particle.style.opacity = '0'; }, 10);
+            setTimeout(() => particle.remove(), 610);
+        }
+    }
+    
+    function showPage(pageId) {
+        const currentPage = document.querySelector('.page.active');
+        const nextPage = document.getElementById(pageId);
+        if (currentPage && nextPage && currentPage.id !== pageId) {
+            currentPage.classList.remove('active');
+            nextPage.classList.add('active');
+        }
+        document.querySelectorAll('.nav-item').forEach(item => { item.classList.toggle('active', item.dataset.page === pageId); });
+    }
+    
+    function formatNumber(num) { if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M'; if (num >= 1_000) return (num / 1_000).toFixed(1) + 'K'; return Math.floor(num).toString(); }
+    
+    function updateAllUI() {
+        if (!gameState.balance) return;
+        const coinEl = document.getElementById('coinBalance'), usdtEl = document.getElementById('usdtBalance');
+        const oldCoins = parseFloat(coinEl.dataset.value) || 0, oldUsdt = parseFloat(usdtEl.dataset.value) || 0;
+        animateValue(coinEl, oldCoins, gameState.balance.coins, 500, formatNumber);
+        animateValue(usdtEl, oldUsdt, gameState.balance.usdt, 500, (val) => val.toFixed(8));
+        coinEl.dataset.value = gameState.balance.coins; usdtEl.dataset.value = gameState.balance.usdt;
+        document.getElementById('tonBalance').textContent = gameState.balance.ton.toFixed(2);
+        document.getElementById('energyCounter').textContent = Math.floor(gameState.energy.current);
+        document.getElementById('leagueName').textContent = gameState.profile.league;
+    }
+    
+    function createFloatingNumber(event, text) { const x=event.clientX||event.touches[0].clientX; const y=event.clientY||event.touches[0].clientY; const el=document.createElement("div"); el.className="floating-number"; el.textContent=text; el.style.left=`${x}px`;el.style.top=`${y}px`; document.body.appendChild(el); setTimeout(()=>{el.style.transform="translateY(-100px)";el.style.opacity="0"},10); setTimeout(()=>el.remove(),1000) }
+    
+    function handleTap(event) { if (gameState.energy.current <= 0) return; createTapParticles(event); const coinsPerTap = gameState.tap_stats.coins_per_tap; gameState.energy.current -= coinsPerTap; gameState.balance.coins += coinsPerTap; document.getElementById("tap-circle").classList.add("tapped"); setTimeout(()=>document.getElementById("tap-circle").classList.remove("tapped"),100); createFloatingNumber(event, `+${coinsPerTap}`); updateAllUI(); }
+    
+    function renderTasks() { const el=document.getElementById("taskList"); if (!el) return; el.innerHTML=Object.entries(TASKS_DATA).map(([id,task])=>`<div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center"><div><h3 class="font-bold">${task.title}</h3><p class="text-sm text-yellow-400">+${task.coins.toLocaleString()} COIN, +${task.usdt} USDT</p></div><button type="button" data-task-id="${id}" class="task-claim-btn bg-blue-600 hover:bg-blue-700 font-bold py-2 px-5 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed">Claim</button></div>`).join(""); document.querySelectorAll(".task-claim-btn").forEach(btn=>btn.addEventListener("click",handleCompleteTask)); updateCompletedTasksUI(); }
+    
+    function updateCompletedTasksUI() { if(gameState.completed_tasks) gameState.completed_tasks.forEach(taskId => { const btn=document.querySelector(`.task-claim-btn[data-task-id="${taskId}"]`); if(btn){btn.textContent="Claimed";btn.disabled=true;} }); }
+    
+    async function handleCompleteTask(event) { const btn=event.target, taskId=btn.dataset.taskId, msgEl=document.getElementById("taskMessage"); msgEl.textContent="Completing task..."; try { const response=await fetch(`${SERVER_URL}/api/complete_task`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:tgUser.id||"default_user",taskId})}); const data=await response.json(); if (response.ok) { gameState.balance=data.new_balance; gameState.completed_tasks.push(taskId); msgEl.textContent=data.message; updateAllUI(); updateCompletedTasksUI(); } else { msgEl.textContent=data.error; } } catch(err) { msgEl.textContent="Server Error!"; } }
+    
+    function renderAdsTasks() { const el = document.getElementById('adTaskList'); if (!el) return; el.innerHTML = ADS_TASKS.map(task => `<div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center"><div class="flex items-center space-x-4"><span class="text-3xl">${task.icon}</span><div><h3 class="font-bold">${task.title}</h3><p class="text-sm text-yellow-400">${task.reward}</p></div></div><button type="button" data-task-id="${task.id}" class="ad-watch-btn font-bold py-2 px-5 rounded-lg ${task.status==="active"?'bg-blue-600 hover:bg-blue-700':'bg-gray-500 cursor-not-allowed'}" ${task.status!=="active"?'disabled':''}>${task.status==="active"?'Go':'Soon'}</button></div>`).join(''); document.querySelectorAll('.ad-watch-btn').forEach(btn => btn.addEventListener('click', handleAdTaskClick)); }
+    
+    async function handleAdTaskClick(event) { const btn=event.target,taskId=btn.dataset.taskId,msgEl=document.getElementById("adTaskMessage");if(!taskId||btn.disabled)return;msgEl.textContent="Loading ad...";const allAdBtns=document.querySelectorAll(".ad-watch-btn:not([disabled])");allAdBtns.forEach(b=>b.disabled=true);show_9678845().then(()=>{msgEl.textContent="Ad watched! Claiming reward...";claimAdReward(taskId);}).catch(()=>{msgEl.textContent="Ad skipped. No reward.";allAdBtns.forEach(b=>b.disabled=false)})}
+    
+    async function claimAdReward(adId) { const msgEl=document.getElementById("adTaskMessage"); try { const response = await fetch(`${SERVER_URL}/api/reward_ad`, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: tgUser.id || 'default_user', adId})}); const data = await response.json(); if(response.ok) { msgEl.textContent=data.message; gameState.balance=data.new_balance; gameState.last_ad_reward_time=data.last_ad_reward_time; updateAllUI(); startAdCooldown(AD_COOLDOWN); } else { msgEl.textContent=data.error; document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]').forEach(b=>b.disabled=false); } } catch(err) { msgEl.textContent="Server Error."; document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]').forEach(b=>b.disabled=false); } }
+    
+    function startAdCooldown(duration) { clearInterval(adCooldownInterval); let remaining = Math.ceil(duration); const msgEl = document.getElementById('adTaskMessage'), adBtns = document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]'); adBtns.forEach(btn => btn.disabled = true); adCooldownInterval = setInterval(() => { if (remaining > 0) { msgEl.textContent = `Next ad available in ${remaining}s`; remaining--; } else { clearInterval(adCooldownInterval); msgEl.textContent = "You can watch an ad now!"; adBtns.forEach(btn => btn.disabled = false); } }, 1000); }
+    
+    setInterval(() => { if (gameState?.energy?.current < gameState?.energy?.max) { gameState.energy.current += 1; const energyEl=document.getElementById('energyCounter'); if(energyEl) energyEl.textContent = Math.floor(gameState.energy.current); } }, 1000);
+    
+    window.addEventListener('load', async () => {
+        try { if(typeof Telegram !== "undefined") { Telegram.WebApp.ready(); tgUser = Telegram.WebApp.initDataUnsafe?.user || {}; } } catch (e) { console.warn("Not in Telegram env."); }
+
+        try {
+            const response = await fetch(`${SERVER_URL}/api/data/${tgUser.id || 'default_user'}`);
+            if (!response.ok) throw new Error("Server response was not ok.");
+            gameState = await response.json();
+        } catch (e) {
+            console.error("Server connection failed:", e);
+            // সার্ভার কানেকশন ফেল করলে একটি ডিফল্ট স্টেট দিয়ে অ্যাপ চালানো হবে
+            gameState = defaultGameState;
+            alert("Could not connect to server. Starting in offline mode.");
+        }
+        
+        gameState.profile.name = tgUser.first_name ? `${tgUser.first_name} ${tgUser.last_name || ''}`.trim() : "PAPA Player";
+
+        const navWrapper = document.getElementById('navWrapper');
+        navWrapper.innerHTML = navItemsConfig.map(item => `<div class="swiper-slide nav-item" data-page="${item.id}">${item.icon}<span>${item.label}</span></div>`).join('');
+        new Swiper(".bottom-nav-slider", { slidesPerView: 4, spaceBetween: 10 });
+        
+        const timeSinceLastAd = (Date.now()/1000) - (gameState.last_ad_reward_time || 0);
+        if (timeSinceLastAd < AD_COOLDOWN) startAdCooldown(AD_COOLDOWN - timeSinceLastAd);
+
+        document.querySelectorAll(".nav-item").forEach(btn => btn.addEventListener("click", () => showPage(btn.dataset.page)));
+        document.getElementById("tap-circle").addEventListener("click", handleTap);
+
+        renderTasks(); renderAdsTasks(); updateAllUI();
+        showPage('earnPage');
+
+        const preloader = document.getElementById("preloader");
+        preloader.style.opacity = "0";
+        setTimeout(() => preloader.style.display = "none", 500);
     });
 </script>
 </body>
