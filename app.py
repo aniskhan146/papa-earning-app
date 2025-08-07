@@ -6,51 +6,50 @@ import sqlite3
 import json
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)  # CORS with credentials
-app.secret_key = os.urandom(24)  # Secret key for sessions
+app.secret_key = os.urandom(24)
+CORS(app, supports_credentials=True)
+
 DATABASE = 'users.db'
 
-# --- Database connection ---
+# ডাটাবেস কানেকশন ফাংশন
 def get_db():
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
+# ডাটাবেস ইনিশিয়ালাইজ করার জন্য
 def init_db():
     with app.app_context():
         db = get_db()
         with open('schema.sql', 'r') as f:
-            db.cursor().executescript(f.read())
+            db.executescript(f.read())
         db.commit()
 
-# --- Configurations ---
-REWARD_PER_AD = 0.10
-REWARD_PER_MONETAG_REWARDED_AD = 0.08
-REWARD_PER_MONETAG_INTERSTITIAL = 0.05
-DAILY_BONUS = 0.50
-COOLDOWN_SECONDS = 30
-
-# --- User Data Management ---
+# ইউজার ডেটা নেওয়া বা তৈরি করা
 def get_user_data():
     user_id = session.get('user_id')
+    db = get_db()
+
     if not user_id:
-        db = get_db()
-        cursor = db.execute('INSERT INTO users (balance, lifetime_points, history, last_ad_time, last_daily_bonus) VALUES (?, ?, ?, ?, ?)',
-                            (0.0, 0.0, '[]', 0, None))
+        cursor = db.execute(
+            'INSERT INTO users (balance, lifetime_points, history, last_ad_time, last_daily_bonus) VALUES (?, ?, ?, ?, ?)',
+            (0.0, 0.0, json.dumps([]), 0, None)
+        )
         db.commit()
         user_id = str(cursor.lastrowid)
         session['user_id'] = user_id
 
-    db = get_db()
-    user_row = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-    if not user_row:
+    user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not user:
+        # যদি না পাওয়া যায়, সেশন রিসেট করে আবার কল করো
         session.pop('user_id', None)
         return get_user_data()
 
-    user_data = dict(user_row)
+    user_data = dict(user)
     user_data['history'] = json.loads(user_data['history'])
     return user_data
 
+# ইউজার ডেটা আপডেট করা
 def update_user_data(user_data):
     db = get_db()
     history_json = json.dumps(user_data['history'])
@@ -58,36 +57,29 @@ def update_user_data(user_data):
                (user_data['balance'], user_data['lifetime_points'], history_json, user_data['last_ad_time'], user_data['last_daily_bonus'], user_data['id']))
     db.commit()
 
-def add_transaction(user_data, type, amount):
-    transaction = {'type': type, 'amount': amount, 'date': datetime.now().isoformat()}
+# ট্রানজেকশন যোগ করা
+def add_transaction(user_data, type_, amount):
+    transaction = {'type': type_, 'amount': amount, 'date': datetime.now().isoformat()}
     user_data['history'].insert(0, transaction)
     if len(user_data['history']) > 50:
         user_data['history'].pop()
 
-# --- API Routes ---
+# কনফিগারেশন
+REWARD_PER_AD = 0.10
+REWARD_PER_MONETAG_REWARDED_AD = 0.08
+REWARD_PER_MONETAG_INTERSTITIAL = 0.05
+DAILY_BONUS = 0.50
+COOLDOWN_SECONDS = 30
 
+# Routes
 @app.route('/')
 def index():
     return "Backend is running!"
 
 @app.route('/api/data')
 def get_data_api():
-    # Log message on frontend connection
-    print(f"📡 Frontend user connected at {datetime.now()}")
-    
-    # Optional: session visits count
-    if 'visits' not in session:
-        session['visits'] = 1
-    else:
-        session['visits'] += 1
-
     user_data = get_user_data()
-    return jsonify({
-        'success': True,
-        'message': 'Connected to backend!',
-        'visits': session['visits'],
-        'user_data': user_data
-    })
+    return jsonify(user_data)
 
 @app.route('/api/reward', methods=['POST'])
 def give_reward():
@@ -105,16 +97,16 @@ def give_reward():
         'monetag_interstitial': (REWARD_PER_MONETAG_INTERSTITIAL, 'Monetag Ad')
     }
 
-    if ad_type in reward_map:
-        reward, transaction_type = reward_map[ad_type]
-        user_data['balance'] += reward
-        user_data['lifetime_points'] += reward
-        user_data['last_ad_time'] = current_time
-        add_transaction(user_data, transaction_type, reward)
-        update_user_data(user_data)
-        return jsonify({'success': True, 'balance': user_data['balance']})
+    if ad_type not in reward_map:
+        return jsonify({'error': 'Invalid ad type'}), 400
 
-    return jsonify({'error': 'Invalid ad type'}), 400
+    reward, transaction_type = reward_map[ad_type]
+    user_data['balance'] += reward
+    user_data['lifetime_points'] += reward
+    user_data['last_ad_time'] = current_time
+    add_transaction(user_data, transaction_type, reward)
+    update_user_data(user_data)
+    return jsonify({'success': True, 'balance': user_data['balance']})
 
 @app.route('/api/daily_bonus', methods=['POST'])
 def claim_daily_bonus():
@@ -129,7 +121,6 @@ def claim_daily_bonus():
     user_data['last_daily_bonus'] = today_str
     add_transaction(user_data, 'Daily Bonus', DAILY_BONUS)
     update_user_data(user_data)
-
     return jsonify({'success': True, 'message': f'You received {DAILY_BONUS} bonus points!'})
 
 @app.route('/api/withdraw', methods=['POST'])
@@ -150,9 +141,8 @@ def withdraw_points():
     user_data['balance'] -= amount
     add_transaction(user_data, 'Withdrawal', -amount)
     update_user_data(user_data)
-
     return jsonify({'success': True, 'message': f'Withdrawal request for {amount} points submitted.'})
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

@@ -1,143 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Papa Earning App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAPA Earning Web App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- AdsGram SDK -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <!-- Monetag SDK -->
+    <script src='//libtl.com/sdk.js' data-zone='9678845' data-sdk='show_9678845'></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn.active {
+            color: #4ade80; /* green-400 */
+            transform: translateY(-4px);
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .btn-grad-green {
+            background-image: linear-gradient(to right, #1D976C 0%, #93F9B9  51%, #1D976C  100%);
+        }
+        .btn-grad-blue {
+            background-image: linear-gradient(to right, #00c6ff 0%, #0072ff 51%, #00c6ff 100%);
+        }
+        .btn-grad-purple {
+            background-image: linear-gradient(to right, #DA22FF 0%, #9733EE  51%, #DA22FF  100%);
+        }
+        .btn-grad {
+            transition: 0.5s;
+            background-size: 200% auto;
+            color: white;
+        }
+        .btn-grad:hover {
+            background-position: right center;
+        }
+        .btn-disabled {
+            background-image: none;
+            background-color: #4b5563;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    </style>
 </head>
-<body>
-  <h1>Welcome to Papa Earning App</h1>
+<body class="bg-gray-900 text-white flex flex-col h-screen">
 
-  <div id="balance">Loading balance...</div>
-  <button id="watchAdBtn">Watch Ad (Get Reward)</button>
-  <button id="dailyBonusBtn">Claim Daily Bonus</button>
-  <br/><br/>
-  <input type="number" id="withdrawAmount" placeholder="Amount to withdraw" />
-  <button id="withdrawBtn">Withdraw</button>
+    <main class="flex-grow p-4 overflow-y-auto">
+        <!-- Earn Page (Default) -->
+        <div id="earnPage" class="page active">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-teal-400">PAPA Earning</h1>
+            </div>
+            <!-- Balance Cards -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-gray-700/50 p-4 rounded-xl text-center">
+                    <p class="text-gray-400 text-sm">Current Balance</p>
+                    <p id="balance" class="text-2xl font-bold text-green-400">0.00</p>
+                </div>
+                <div class="bg-gray-700/50 p-4 rounded-xl text-center">
+                    <p class="text-gray-400 text-sm">Lifetime Points</p>
+                    <p id="lifetimePoints" class="text-2xl font-bold text-teal-300">0.00</p>
+                </div>
+            </div>
+            
+            <div class="text-center my-6 space-y-4">
+                <button id="viewAdBtn" class="w-full btn-grad btn-grad-green font-semibold py-3 px-6 rounded-lg shadow-lg text-lg">
+                    💰 Watch Ad (AdsGram)
+                </button>
+                <button id="viewMonetagRewardedAdBtn" class="w-full btn-grad btn-grad-purple font-semibold py-3 px-6 rounded-lg shadow-lg text-lg">
+                    🎁 Watch & Earn (Monetag)
+                </button>
+                <button id="viewMonetagAdBtn" class="w-full btn-grad btn-grad-blue font-semibold py-3 px-6 rounded-lg shadow-lg text-lg">
+                    💎 Show Ad (Monetag)
+                </button>
+            </div>
+            <div id="messageArea" class="text-center mt-4 text-yellow-400 h-6"></div>
+        </div>
 
-  <div id="message" style="margin-top:20px; color: green;"></div>
-  <div id="error" style="margin-top:20px; color: red;"></div>
+        <!-- Referral Page -->
+        <div id="referPage" class="page">
+            <h2 class="text-2xl font-bold text-center mb-6 text-green-400">Refer a Friend</h2>
+            <div class="bg-gray-800 p-6 rounded-lg text-center">
+                <p class="mb-4 text-gray-300">Share this link with your friends. When they join, you'll earn <span id="referralBonusText"></span> points!</p>
+                <input id="referralLinkInput" type="text" value="" readonly class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white text-center">
+                <button id="copyReferralBtn" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Copy Link</button>
+            </div>
+        </div>
 
-  <script>
-    const BACKEND_URL = "https://papa-earning-app.onrender.com";
+        <!-- Withdraw Page -->
+        <div id="withdrawPage" class="page">
+            <h2 class="text-2xl font-bold text-center mb-6 text-green-400">Withdraw Points</h2>
+            <div class="bg-gray-800 p-6 rounded-lg">
+                 <p class="mb-4 text-gray-300">Enter your withdrawal details below.</p>
+                <input type="text" placeholder="Your Wallet Address" class="w-full p-3 rounded bg-gray-700 border border-gray-600 mb-3 text-white">
+                <input type="number" placeholder="Amount (e.g., 10.00)" class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white">
+                <button id="submitWithdrawBtn" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Submit Request</button>
+            </div>
+        </div>
 
-    const balanceDiv = document.getElementById('balance');
-    const messageDiv = document.getElementById('message');
-    const errorDiv = document.getElementById('error');
+        <!-- Profile Page with History -->
+        <div id="profilePage" class="page">
+            <h2 class="text-2xl font-bold text-center mb-4 text-green-400">Profile & History</h2>
+             <div class="bg-gray-800 p-6 rounded-lg text-center mb-4">
+                <p class="mb-4 text-gray-300">Claim your daily bonus once every 24 hours!</p>
+                <button id="dailyBonusBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg text-lg">🎁 Claim Daily Bonus</button>
+                <p id="bonusMessage" class="mt-4 text-yellow-400 h-6"></p>
+            </div>
+            <h3 class="text-xl font-bold text-center mb-4 text-gray-300">Transaction History</h3>
+            <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto">
+                <!-- History items will be injected here -->
+            </div>
+        </div>
+    </main>
 
-    // ইউজারের ডাটা নিয়ে আসার ফাংশন
-    async function fetchUserData() {
-      try {
-        const res = await fetch(BACKEND_URL + '/api/data', {
-          method: 'GET',
-          credentials: 'include' // সেশন ও কুকি পাঠাতে হয়
-        });
-        const data = await res.json();
-        if(data.balance !== undefined){
-          balanceDiv.textContent = `Your balance: ${data.balance.toFixed(2)} points`;
-        } else if(data.user_data && data.user_data.balance !== undefined){
-          // যদি তোমার backend return করে user_data এর মধ্যে থাকে
-          balanceDiv.textContent = `Your balance: ${data.user_data.balance.toFixed(2)} points`;
-        } else {
-          balanceDiv.textContent = 'Balance data not available';
+    <!-- Bottom Navigation -->
+    <nav class="bg-gray-800 shadow-lg p-2 flex justify-around">
+        <button data-page="earnPage" class="nav-btn active flex-1 flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>
+            <span class="text-xs">Earn</span>
+        </button>
+        <button data-page="referPage" class="nav-btn flex-1 flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span class="text-xs">Refer</span>
+        </button>
+        <button data-page="withdrawPage" class="nav-btn flex-1 flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span class="text-xs">Withdraw</span>
+        </button>
+        <button data-page="profilePage" class="nav-btn flex-1 flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span class="text-xs">Profile</span>
+        </button>
+    </nav>
+
+    <script>
+        // --- Configuration ---
+        const ADSGRAM_BLOCK_ID = "13579";
+        
+        // *** GURUTWOPURNO PORIBORTON ***
+        // Ekhane ekhon apnar Render theke pawa public URL-ti dewa ache.
+        const SERVER_URL = 'https://papa-earning-app.onrender.com'; 
+
+        let adController;
+        let cooldownInterval;
+
+        // --- DOM Elements ---
+        const mainContent = document.querySelector('main');
+        const navBar = document.querySelector('nav');
+        const balanceElement = document.getElementById('balance');
+        const lifetimePointsElement = document.getElementById('lifetimePoints');
+        const viewAdBtn = document.getElementById('viewAdBtn');
+        const viewMonetagAdBtn = document.getElementById('viewMonetagAdBtn');
+        const viewMonetagRewardedAdBtn = document.getElementById('viewMonetagRewardedAdBtn');
+        const messageArea = document.getElementById('messageArea');
+        const bonusMessage = document.getElementById('bonusMessage');
+        const dailyBonusBtn = document.getElementById('dailyBonusBtn');
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const pages = document.querySelectorAll('.page');
+        const referralLinkInput = document.getElementById('referralLinkInput');
+        const copyReferralBtn = document.getElementById('copyReferralBtn');
+        const referralBonusText = document.getElementById('referralBonusText');
+        const submitWithdrawBtn = document.getElementById('submitWithdrawBtn');
+        const historyList = document.getElementById('historyList');
+
+        // --- Functions ---
+        async function fetchData() {
+            if (SERVER_URL === 'YOUR_PUBLIC_BACKEND_URL_HERE') {
+                messageArea.textContent = "Please set your Backend URL in the code.";
+                return;
+            }
+            try {
+                const response = await fetch(`${SERVER_URL}/api/data`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+                messageArea.textContent = "Could not connect to server.";
+            }
         }
-      } catch (err) {
-        balanceDiv.textContent = 'Failed to load balance';
-        console.error('Error fetching user data:', err);
-      }
-    }
 
-    // রিওয়ার্ড দেওয়ার ফাংশন (যখন অ্যাড দেখা হয়)
-    async function giveReward() {
-      try {
-        const res = await fetch(BACKEND_URL + '/api/reward', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ type: 'adsgram' })  // adsgram / monetag_rewarded / monetag_interstitial ইত্যাদি দিতে পারো
-        });
-        const data = await res.json();
-        if(data.success){
-          messageDiv.textContent = 'Reward added!';
-          errorDiv.textContent = '';
-          fetchUserData();  // আপডেট ব্যালেন্স দেখানোর জন্য
-        } else {
-          errorDiv.textContent = data.error || 'Failed to add reward';
-          messageDiv.textContent = '';
+        function updateUI(data) {
+            balanceElement.textContent = data.balance.toFixed(2);
+            lifetimePointsElement.textContent = data.lifetime_points.toFixed(2);
+            renderHistory(data.history);
+            checkDailyBonusStatus(data.last_daily_bonus);
+            
+            const now = new Date().getTime() / 1000;
+            const timePassed = now - data.last_ad_time;
+            const cooldownSeconds = 30;
+            
+            if (timePassed < cooldownSeconds) {
+                startGlobalCooldownTimer(cooldownSeconds - timePassed);
+            }
         }
-      } catch(err) {
-        errorDiv.textContent = 'Error giving reward';
-        messageDiv.textContent = '';
-        console.error(err);
-      }
-    }
 
-    // ডেইলি বোনাস ক্লেইম করার ফাংশন
-    async function claimDailyBonus() {
-      try {
-        const res = await fetch(BACKEND_URL + '/api/daily_bonus', {
-          method: 'POST',
-          credentials: 'include'
-        });
-        const data = await res.json();
-        if(data.success){
-          messageDiv.textContent = data.message || 'Daily bonus claimed!';
-          errorDiv.textContent = '';
-          fetchUserData();
-        } else {
-          errorDiv.textContent = data.error || 'Failed to claim daily bonus';
-          messageDiv.textContent = '';
+        function renderHistory(history) {
+            historyList.innerHTML = history.length === 0 ? `<p class="text-gray-500 text-center">No transaction history.</p>` :
+                history.map(tx => {
+                    const txDate = new Date(tx.date);
+                    const dateString = txDate.toLocaleDateString();
+                    const timeString = txDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return `
+                        <div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-lg">
+                            <div>
+                                <p class="font-semibold">${tx.type}</p>
+                                <p class="text-xs text-gray-400">${dateString} at ${timeString}</p>
+                            </div>
+                            <p class="font-bold text-green-400">+${tx.amount.toFixed(2)}</p>
+                        </div>`;
+                }).join('');
         }
-      } catch(err) {
-        errorDiv.textContent = 'Error claiming daily bonus';
-        messageDiv.textContent = '';
-        console.error(err);
-      }
-    }
 
-    // উইথড্রয়াল রিকোয়েস্ট করার ফাংশন
-    async function withdrawPoints() {
-      const amountInput = document.getElementById('withdrawAmount');
-      const amount = parseFloat(amountInput.value);
-      if(isNaN(amount) || amount <= 0){
-        errorDiv.textContent = 'Please enter a valid withdrawal amount';
-        messageDiv.textContent = '';
-        return;
-      }
-      try {
-        const res = await fetch(BACKEND_URL + '/api/withdraw', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ amount: amount })
-        });
-        const data = await res.json();
-        if(data.success){
-          messageDiv.textContent = data.message || 'Withdrawal requested!';
-          errorDiv.textContent = '';
-          fetchUserData();
-        } else {
-          errorDiv.textContent = data.error || 'Failed to withdraw';
-          messageDiv.textContent = '';
+        function showPage(pageId) {
+            pages.forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === pageId));
+            if (pageId === 'profilePage') fetchData(); // Refresh history on page view
         }
-      } catch(err) {
-        errorDiv.textContent = 'Error processing withdrawal';
-        messageDiv.textContent = '';
-        console.error(err);
-      }
-    }
 
-    // ইভেন্ট লিসেনার যোগ করা
-    document.getElementById('watchAdBtn').addEventListener('click', giveReward);
-    document.getElementById('dailyBonusBtn').addEventListener('click', claimDailyBonus);
-    document.getElementById('withdrawBtn').addEventListener('click', withdrawPoints);
+        function initializeAdsGram() {
+            if (window.Adsgram && ADSGRAM_BLOCK_ID !== "YOUR_ADSGRAM_BLOCK_ID") {
+                adController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+            } else {
+                viewAdBtn.textContent = !window.Adsgram ? "Ad Service Error" : "Setup Required";
+                viewAdBtn.disabled = true;
+                viewAdBtn.classList.add('btn-disabled');
+                viewAdBtn.classList.remove('btn-grad-green');
+            }
+        }
 
-    // প্রথমে পেজ লোড হলে ইউজারের ডেটা নিয়ে আসো
-    fetchUserData();
-  </script>
+        async function triggerReward(adType) {
+            if (SERVER_URL === 'YOUR_PUBLIC_BACKEND_URL_HERE') {
+                messageArea.textContent = "Backend URL is not configured.";
+                return;
+            }
+            try {
+                const response = await fetch(`${SERVER_URL}/api/reward`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: adType })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    messageArea.textContent = `🎉 Reward claimed!`;
+                    fetchData();
+                } else {
+                    messageArea.textContent = data.error || "Cooldown active.";
+                }
+            } catch (error) {
+                console.error('Failed to trigger reward:', error);
+                messageArea.textContent = "Server error.";
+            }
+        }
+
+        function handleViewAd() {
+            if (!adController) return;
+            adController.show().then(() => {
+                triggerReward('adsgram');
+            }).catch(() => {
+                messageArea.textContent = "Ad was skipped. No points earned.";
+            });
+        }
+        
+        function handleMonetagRewardedAd() {
+            show_9678845().then(() => {
+                triggerReward('monetag_rewarded');
+            }).catch(() => {
+                messageArea.textContent = "Ad was skipped. No points earned.";
+            });
+        }
+
+        function handleMonetagInterstitial() {
+            show_9678845({ type: 'inApp', inAppSettings: { frequency: 1, capping: 0.01, interval: 1, timeout: 1 } });
+            triggerReward('monetag_interstitial');
+        }
+
+        function startGlobalCooldownTimer(initialRemaining) {
+            clearInterval(cooldownInterval);
+            let remaining = Math.ceil(initialRemaining);
+
+            [viewAdBtn, viewMonetagAdBtn, viewMonetagRewardedAdBtn].forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('btn-disabled');
+                btn.classList.remove('btn-grad-green', 'btn-grad-blue', 'btn-grad-purple');
+            });
+
+            cooldownInterval = setInterval(() => {
+                if (remaining > 0) {
+                    messageArea.textContent = `Next ad bonus in ${remaining}s`;
+                    remaining--;
+                } else {
+                    clearInterval(cooldownInterval);
+                    messageArea.textContent = 'Ad bonus is available now!';
+                    [viewAdBtn, viewMonetagAdBtn, viewMonetagRewardedAdBtn].forEach(btn => btn.disabled = false);
+                    viewAdBtn.classList.remove('btn-disabled');
+                    viewMonetagAdBtn.classList.remove('btn-disabled');
+                    viewMonetagRewardedAdBtn.classList.remove('btn-disabled');
+                    viewAdBtn.classList.add('btn-grad-green');
+                    viewMonetagAdBtn.classList.add('btn-grad-blue');
+                    viewMonetagRewardedAdBtn.classList.add('btn-grad-purple');
+                }
+            }, 1000);
+        }
+
+        async function handleDailyBonus() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/daily_bonus`, { method: 'POST' });
+                const data = await response.json();
+                if (response.ok) {
+                    bonusMessage.textContent = data.message;
+                    fetchData();
+                } else {
+                    bonusMessage.textContent = data.error;
+                }
+            } catch (error) {
+                bonusMessage.textContent = "Server error.";
+            }
+        }
+
+        function checkDailyBonusStatus(lastClaimISO) {
+            if (!lastClaimISO) {
+                dailyBonusBtn.disabled = false;
+                return;
+            }
+            const lastClaimDate = new Date(lastClaimISO).toDateString();
+            const today = new Date().toDateString();
+            if (lastClaimDate === today) {
+                dailyBonusBtn.disabled = true;
+                dailyBonusBtn.classList.add('btn-disabled');
+            } else {
+                dailyBonusBtn.disabled = false;
+                dailyBonusBtn.classList.remove('btn-disabled');
+            }
+        }
+        
+        function setupReferralPage() {
+            referralLinkInput.value = `${window.location.href.split('?')[0]}?ref=USER123`;
+        }
+
+        // --- Event Listeners & Initial Setup ---
+        navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+        viewAdBtn.addEventListener('click', handleViewAd);
+        viewMonetagAdBtn.addEventListener('click', handleMonetagInterstitial);
+        viewMonetagRewardedAdBtn.addEventListener('click', handleMonetagRewardedAd);
+        dailyBonusBtn.addEventListener('click', handleDailyBonus);
+        
+        window.addEventListener('load', () => {
+            fetchData();
+            initializeAdsGram();
+        });
+    </script>
 </body>
 </html>
