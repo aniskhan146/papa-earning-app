@@ -8,178 +8,94 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="//libtl.com/sdk.js" data-zone="9678845" data-sdk="show_9678845"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- নতুন CSS: সব অ্যানিমেশন এবং স্টাইল এখানে যোগ করা হয়েছে -->
     <style>
         body { font-family: 'Poppins', sans-serif; overflow: hidden; background-color: #1a1a2e; }
-        
-        /* 1. পেইজ ট্রানজিশনের জন্য স্টাইল */
-        main { position: relative; } /* Important for absolute positioning of pages */
+        #preloader { transition: opacity 0.5s ease-in-out; }
+        main { position: relative; }
         .page {
             display: flex;
-            position: absolute; /* Pages overlap for transition */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             flex-direction: column;
             opacity: 0;
             pointer-events: none;
-            transform: scale(1.05);
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: scale(1.03);
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
-        .page.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: scale(1);
-        }
-
-        /* 2. ট্যাপ অ্যানিমেশন এবং পার্টিকেল */
+        .page.active { opacity: 1; pointer-events: auto; transform: scale(1); }
         .tap-circle.tapped { transform: scale(0.95); }
-        .tap-particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: radial-gradient(circle, rgba(255,255,150,1) 0%, rgba(255,165,0,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            transform: scale(1);
-            opacity: 1;
-            transition: transform 0.6s cubic-bezier(0.1, 0.7, 0.3, 1), opacity 0.6s linear;
-        }
-
-        /* 3. লোডিং স্ক্রিনের স্টাইল */
-        #preloader { transition: opacity 0.5s ease-in-out; }
-
-        /* অন্যান্য ছোট স্টাইল */
+        .tap-particle { position: absolute; width: 10px; height: 10px; background: radial-gradient(circle, #ffff96, #ffA50000 70%); border-radius: 50%; pointer-events: none; transition: transform 0.6s cubic-bezier(0.1,0.7,0.3,1), opacity 0.6s linear; }
         .floating-number { position: absolute; font-size: 2.5rem; font-weight: 800; color: white; opacity: 1; transition: all 1s ease-out; pointer-events: none; text-shadow: 0 2px 4px #00000080; }
-        .nav-item { display:flex; flex-direction:column; align-items:center; justify-content:center; color:#9ca3af; padding:4px 0; cursor:pointer; transition:all .3s; width:25%!important }
-        .nav-item.active,.nav-item:hover { color:#fff; transform:scale(1.1) }
-        .nav-item span { font-size:.7rem; font-weight:500 }
     </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 text-white select-none">
 
-<!-- 1. প্রি-লোডার (অ্যাপ লোড হওয়ার সময় দেখাবে) -->
 <div id="preloader" class="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center z-50">
     <div class="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-yellow-400"></div>
     <p class="mt-4 text-lg font-semibold">Loading PAPA Game...</p>
 </div>
 
-
 <div id="app-container" class="flex flex-col h-screen max-w-md mx-auto bg-black/40">
 <main class="flex-grow overflow-hidden">
     <!-- EARN PAGE -->
-    <div id="earnPage" class="page active p-4 space-y-4">
+    <div id="earnPage" class="page p-4 space-y-4">
         <header class="flex items-center justify-around space-x-2 bg-black/20 p-2 rounded-2xl">
-            <!-- ব্যালেন্সের জন্য data-value অ্যাট্রিবিউট যোগ করা হয়েছে -->
             <div class="flex items-center space-x-1.5"><img src="https://img.icons8.com/fluency/48/stack-of-coins.png" alt="coin" class="w-7 h-7"><p id="coinBalance" data-value="0" class="font-bold">0</p></div>
             <div class="flex items-center space-x-1.5"><img src="https://img.icons8.com/color/48/us-dollar-circled--v1.png" alt="usdt" class="w-7 h-7"><p id="usdtBalance" data-value="0" class="font-bold">0.00</p></div>
             <div class="flex items-center space-x-1.5"><svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24ZM11.6596 5.33445C11.1969 5.33445 10.8242 5.70718 10.8242 6.16988V13.8055L6.99619 11.232C6.54133 10.9329 5.92336 11.0825 5.62419 11.5373C5.32503 11.9922 5.4746 12.6102 5.92947 12.9093L11.0421 16.5372C11.4552 16.8093 11.979 16.7441 12.3082 16.3917L18.3444 9.94726C18.7291 9.53775 18.6946 8.88714 18.285 8.50244C17.8755 8.11774 17.2249 8.15227 16.8402 8.56178L12.495 13.2085V6.16988C12.495 5.70718 12.1223 5.33445 11.6596 5.33445Z" fill="white"></path></svg><p id="tonBalance" class="font-bold">0.00</p></div>
         </header>
-        <section class="flex justify-between items-center px-2"> <button type="button" class="bg-gray-800/80 px-4 py-2 rounded-lg font-semibold flex items-center space-x-2"><img src="https://img.icons8.com/arcade/64/trophy.png" alt="trophy" class="w-6 h-6"><span id="leagueName">Gold</span></button> <button type="button" onclick="showPage('adsPage')" class="bg-red-600 px-6 py-2 rounded-lg font-bold">Ads to Earn</button> </section>
-        <div id="tap-area" class="flex-grow flex flex-col items-center justify-center relative"> <div id="tap-circle" class="tap-circle w-60 h-60 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center shadow-2xl transition-transform duration-75 ease-in-out cursor-pointer"> <p class="text-3xl font-black text-center">Click Game<br>Tap Tap</p> </div> </div>
-        <section class="flex items-center justify-between px-2"> <div class="flex items-center space-x-2"> <img src="https://img.icons8.com/stickers/100/lightning-bolt.png" alt="energy" class="w-10 h-10"> <p id="energyCounter" class="text-2xl font-bold">200</p> </div> <button type="button" class="bg-red-500 hover:bg-red-600 font-bold py-3 px-8 rounded-full shadow-lg">🚀 Boost</button> </section>
+        <section class="flex justify-between items-center px-2"><button type="button" class="bg-gray-800/80 px-4 py-2 rounded-lg font-semibold flex items-center space-x-2"><img src="https://img.icons8.com/arcade/64/trophy.png" alt="trophy" class="w-6 h-6"><span id="leagueName">Gold</span></button><button type="button" onclick="showPage('adsPage')" class="bg-red-600 px-6 py-2 rounded-lg font-bold">Ads to Earn</button></section>
+        <div id="tap-area" class="flex-grow flex flex-col items-center justify-center relative"><div id="tap-circle" class="tap-circle w-60 h-60 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center shadow-2xl transition-transform duration-75 ease-in-out cursor-pointer"><p class="text-3xl font-black text-center">Click Game<br>Tap Tap</p></div></div>
+        <section class="flex items-center justify-between px-2"><div class="flex items-center space-x-2"><img src="https://img.icons8.com/stickers/100/lightning-bolt.png" alt="energy" class="w-10 h-10"><p id="energyCounter" class="text-2xl font-bold">200</p></div><button type="button" class="bg-red-500 hover:bg-red-600 font-bold py-3 px-8 rounded-full shadow-lg">🚀 Boost</button></section>
     </div>
-    <!-- (বাকি সব পেইজ অপরিবর্তিত) -->
-    <div id="adsPage" class="page p-4 overflow-y-auto"> ... </div>
-    <div id="taskPage" class="page p-4 overflow-y-auto"> ... </div>
-    <div id="profilePage" class="page p-4 items-center justify-center"> ... </div>
+    <div id="adsPage" class="page p-4 overflow-y-auto"><h1 class="text-3xl font-bold text-center mb-6">Ads For USDT</h1><p class="text-sm text-center text-gray-400 mb-6">Watch an ad to claim your reward. There is a short cooldown after each watch.</p><div id="adTaskList" class="space-y-3"></div><p id="adTaskMessage" class="text-center mt-4 text-yellow-400 h-6"></p><button type="button" class="mt-8 text-gray-300 underline" onclick="showPage('earnPage')">Go Back</button></div>
+    <div id="taskPage" class="page p-4 overflow-y-auto"><h1 class="text-3xl font-bold text-center mb-6">Complete Tasks</h1><div id="taskList" class="space-y-3"></div><p id="taskMessage" class="text-center mt-4 text-green-400"></p></div>
+    <div id="profilePage" class="page p-4 items-center justify-center"><h1 class="text-3xl font-bold">Profile Page</h1><p class="mt-4">This section is coming soon!</p></div>
 </main>
-<footer class="bg-black/30 p-2 z-10"><div class="swiper bottom-nav-slider"><div class="swiper-wrapper" id="navWrapper"></div></div></footer>
+<footer class="bg-black/30 p-2 z-10"><div class="swiper bottom-nav-slider"><div class="swiper-wrapper" id="navWrapper"></div></div><style>.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9ca3af;padding:4px 0;cursor:pointer;transition:all .3s;width:25%!important}.nav-item.active,.nav-item:hover{color:#fff;transform:scale(1.1)}.nav-item span{font-size:.7rem;font-weight:500}</style></footer>
 </div>
 
 <script>
-    // --- Configuration (অপরিবর্তিত) ---
     const SERVER_URL = 'https://papa-earning-app.onrender.com';
     let gameState = {};
     let tgUser = {};
+    let adCooldownInterval;
+    const AD_COOLDOWN = 25;
+    const TASKS_DATA={"task1":{"coins":5e4,"usdt":.1,"title":"Join Community"},"task2":{"coins":1e5,"usdt":0,"title":"Follow on X"}};
+    const ADS_TASKS=[{id:"monetag_reward_1",title:"Monetag Rewarded Ad 1",icon:"📺",reward:"+0.00000551 USDT",status:"active"},{id:"monetag_reward_2",title:"Monetag Rewarded Ad 2",icon:"✨",reward:"+0.00000551 USDT",status:"active"},{id:"partner_ad_1",title:"New Partner Offer",icon:"🤝",reward:"SOON",status:"coming_soon"},{id:"video_ad_1",title:"Watch Short Video",icon:"🎬",reward:"SOON",status:"coming_soon"},{id:"special_promo",title:"Special Promo Ad",icon:"💎",reward:"SOON",status:"coming_soon"}];
+    const navItemsConfig=[{id:"earnPage",label:"Earn",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>`},{id:"adsPage",label:"Ads",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path><path d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.235a.375.375 0 0 1-.541-.328V8.765a.375.375 0 0 1 .541-.328l5.603 3.235Z"></path></svg>`},{id:"taskPage",label:"Task",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M11.35 3.836A8.995 8.995 0 0 1 12 3c5.523 0 10 2.239 10 5s-4.477 5-10 5-10-2.239-10-5c0-1.294.613-2.484 1.583-3.327"></path><path d="M12 21a2 2 0 0 1-2-2v-6m4 8a2 2 0 0 0-2-2v-6m0 0a2 2 0 1 0-4 0v6a2 2 0 0 0 2 2m4 0a2 2 0 0 1 2-2v-6m0 0a2 2 0 1 1-4 0v6a2 2 0 0 1 2 2m-8-2.923A8.963 8.963 0 0 1 2.417 11.75 8.963 8.963 0 0 1 2 11c0-2.203 2.898-4.148 7-4.836"></path></svg>`},{id:"profilePage",label:"Profile",icon:`<svg class="w-7 h-7"fill="none"stroke="currentColor"stroke-width="1.5"viewBox="0 0 24 24"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75a17.933 17.933 0 0 1-7.499-1.632Z"></path></svg>`}];
 
-    // --- DOM Elements (অপরিবর্তিত) ---
-
-    // --- নতুন: অ্যানিমেটেড ভ্যালু ফাংশন ---
-    function animateValue(element, start, end, duration, formatFunc = (val) => Math.floor(val)) {
-        if (start === end) return;
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            element.innerHTML = formatFunc(progress * (end - start) + start);
-            if (progress < 1) window.requestAnimationFrame(step);
-        };
-        window.requestAnimationFrame(step);
-    }
+    function animateValue(e,t,a,s,l=e=>Math.floor(e)){if(t===a)return;let n=null;const i=c=>{n||(n=c);const r=Math.min((c-n)/s,1),d=r*(a-t)+t;e.innerHTML=l(d),r<1&&window.requestAnimationFrame(i)};window.requestAnimationFrame(i)}
+    function createTapParticles(e){const t=e.clientX||e.touches[0].clientX,a=e.clientY||e.touches[0].clientY;for(let e=0;e<8;e++){const s=document.createElement("div");s.className="tap-particle",document.body.appendChild(s);const l=2*Math.random()*Math.PI,n=40*Math.random()+30;s.style.left=`${t}px`,s.style.top=`${a}px`,setTimeout(()=>{s.style.transform=`translate(${Math.cos(l)*n}px, ${Math.sin(l)*n}px) scale(0)`,s.style.opacity="0"},10),setTimeout(()=>s.remove(),610)}}
+    function showPage(e){const t=document.querySelector(".page.active"),a=document.getElementById(e);t&&a&&t.id!==a.id&&(t.classList.remove("active"),a.classList.add("active")),document.querySelectorAll(".nav-item").forEach(t=>{t.classList.toggle("active",t.dataset.page===e)})}
+    function formatNumber(e){return e>=1e6?(e/1e6).toFixed(2)+"M":e>=1e3?(e/1e3).toFixed(1)+"K":Math.floor(e).toString()}
+    function updateAllUI(){if(!gameState.balance)return;const e=document.getElementById("coinBalance"),t=document.getElementById("usdtBalance"),a=parseFloat(e.dataset.value)||0,s=parseFloat(t.dataset.value)||0;animateValue(e,a,gameState.balance.coins,500,formatNumber),animateValue(t,s,gameState.balance.usdt,500,e=>e.toFixed(8)),e.dataset.value=gameState.balance.coins,t.dataset.value=gameState.balance.usdt,document.getElementById("tonBalance").textContent=gameState.balance.ton.toFixed(2),document.getElementById("energyCounter").textContent=Math.floor(gameState.energy.current),document.getElementById("leagueName").textContent=gameState.profile.league}
+    function createFloatingNumber(e,t){const a=e.clientX||e.touches[0].clientX,n=e.clientY||e.touches[0].clientY,s=document.createElement("div");s.className="floating-number",s.textContent=t,s.style.left=`${a}px`,s.style.top=`${n}px`,document.body.appendChild(s),setTimeout(()=>{s.style.transform="translateY(-100px)",s.style.opacity="0"},10),setTimeout(()=>{s.remove()},1e3)}
+    function handleTap(e){if(gameState.energy.current<=0)return;createTapParticles(e);const t=gameState.tap_stats.coins_per_tap;gameState.energy.current-=t,gameState.balance.coins+=t,document.getElementById("tap-circle").classList.add("tapped"),setTimeout(()=>document.getElementById("tap-circle").classList.remove("tapped"),100),createFloatingNumber(e,`+${t}`),updateAllUI()}
+    function renderTasks(){const e=document.getElementById("taskList");e.innerHTML=Object.entries(TASKS_DATA).map(([t,a])=>`<div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center"><div><h3 class="font-bold">${a.title}</h3><p class="text-sm text-yellow-400">+${a.coins.toLocaleString()} COIN, +${a.usdt} USDT</p></div><button type="button" data-task-id="${t}" class="task-claim-btn bg-blue-600 hover:bg-blue-700 font-bold py-2 px-5 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed">Claim</button></div>`).join(""),document.querySelectorAll(".task-claim-btn").forEach(t=>t.addEventListener("click",handleCompleteTask)),updateCompletedTasksUI()}
+    function updateCompletedTasksUI(){gameState.completed_tasks&&gameState.completed_tasks.forEach(e=>{const t=document.querySelector(`.task-claim-btn[data-task-id="${e}"]`);t&&(t.textContent="Claimed",t.disabled=!0)})}
+    async function handleCompleteTask(e){const t=e.target,a=t.dataset.taskId,s=document.getElementById("taskMessage");s.textContent="Completing task...";try{const e=await fetch(`${SERVER_URL}/api/complete_task`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:tgUser.id||"default_user",taskId:a})}),c=await e.json();e.ok?(gameState.balance=c.new_balance,gameState.completed_tasks.push(a),s.textContent=c.message,updateAllUI(),updateCompletedTasksUI()):s.textContent=c.error}catch(e){s.textContent="Server Error!"}}
+    function renderAdsTasks(){const e=document.getElementById("adTaskList");e.innerHTML=ADS_TASKS.map(t=>`<div class="bg-gray-800 p-4 rounded-lg flex justify-between items-center"><div class="flex items-center space-x-4"><span class="text-3xl">${t.icon}</span><div><h3 class="font-bold">${t.title}</h3><p class="text-sm text-yellow-400">${t.reward}</p></div></div><button type="button" data-task-id="${t.id}" class="ad-watch-btn font-bold py-2 px-5 rounded-lg ${"active"===t.status?"bg-blue-600 hover:bg-blue-700":"bg-gray-500 cursor-not-allowed"}" ${"active"!==t.status?"disabled":""}>${"active"===t.status?"Go":"Soon"}</button></div>`).join(""),document.querySelectorAll(".ad-watch-btn").forEach(t=>t.addEventListener("click",handleAdTaskClick))}
+    async function handleAdTaskClick(e){const t=e.target,a=t.dataset.taskId,s=document.getElementById("adTaskMessage");if(!a||t.disabled)return;s.textContent="Loading ad...";const c=document.querySelectorAll(".ad-watch-btn:not([disabled])");c.forEach(e=>e.disabled=!0),show_9678845().then(()=>{s.textContent="Ad watched! Claiming reward...",claimAdReward(a)}).catch(()=>{s.textContent="Ad skipped. No reward.",c.forEach(e=>e.disabled=!1)})}
+    async function claimAdReward(e){const t=document.getElementById("adTaskMessage");try{const a=await fetch(`${SERVER_URL}/api/reward_ad`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:tgUser.id||"default_user",adId:e})}),s=await a.json();a.ok?(t.textContent=s.message,gameState.balance=s.new_balance,gameState.last_ad_reward_time=s.last_ad_reward_time,updateAllUI(),startAdCooldown(AD_COOLDOWN)):(t.textContent=s.error,document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]').forEach(e=>e.disabled=!1))}catch(e){t.textContent="Server Error.",document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]').forEach(e=>e.disabled=!1)}}
+    function startAdCooldown(e){clearInterval(adCooldownInterval);let t=Math.ceil(e);const a=document.getElementById("adTaskMessage"),s=document.querySelectorAll('.ad-watch-btn[data-task-id^="monetag"]');s.forEach(e=>e.disabled=!0),adCooldownInterval=setInterval(()=>{t>0?(a.textContent=`Next ad available in ${t}s`,t--):(clearInterval(adCooldownInterval),a.textContent="You can watch an ad now!",s.forEach(e=>e.disabled=!1))},1e3)}
+    setInterval(()=>{if(gameState?.energy?.current<gameState?.energy?.max){gameState.energy.current+=1;const e=document.getElementById("energyCounter");e&&(e.textContent=`${Math.floor(gameState.energy.current)}`)}},1000);
     
-    // --- নতুন: ট্যাপ পার্টিকেল ফাংশন ---
-    function createTapParticles(e) {
-        const x = e.clientX || e.touches[0].clientX;
-        const y = e.clientY || e.touches[0].clientY;
-        for (let i = 0; i < 8; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'tap-particle';
-            document.body.appendChild(particle);
-            const angle = Math.random() * 2 * Math.PI;
-            const distance = Math.random() * 60 + 30;
-            particle.style.left = `${x}px`;
-            particle.style.top = `${y}px`;
-            setTimeout(() => {
-                particle.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0)`;
-                particle.style.opacity = '0';
-            }, 10);
-            setTimeout(() => particle.remove(), 610);
-        }
-    }
-
-    // --- নতুন: পেইজ ট্রানজিশন ফাংশন ---
-    function showPage(pageId) {
-        const currentPage = document.querySelector('.page.active');
-        const nextPage = document.getElementById(pageId);
-        if (currentPage && nextPage && currentPage.id !== pageId) {
-            currentPage.classList.remove('active');
-            nextPage.classList.add('active');
-        }
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.page === pageId);
-        });
-    }
-
-    // --- handleTap ফাংশনটি আপডেট করা হয়েছে ---
-    function handleTap(e) {
-        if (gameState.energy.current <= 0) return;
-        createTapParticles(e); // ট্যাপ পার্টিকেল যোগ করা
-        // ... (বাকি কোড অপরিবর্তিত) ...
-    }
-
-    // --- updateAllUI ফাংশনটি আপডেট করা হয়েছে ---
-    function updateAllUI() {
-        if (!gameState.balance) return;
-        const coinEl = document.getElementById('coinBalance');
-        const usdtEl = document.getElementById('usdtBalance');
-        const oldCoins = parseFloat(coinEl.dataset.value) || 0;
-        const oldUsdt = parseFloat(usdtEl.dataset.value) || 0;
-
-        animateValue(coinEl, oldCoins, gameState.balance.coins, 500, formatNumber);
-        animateValue(usdtEl, oldUsdt, gameState.balance.usdt, 500, (val) => val.toFixed(8));
-
-        coinEl.dataset.value = gameState.balance.coins;
-        usdtEl.dataset.value = gameState.balance.usdt;
-
-        // ... (বাকি UI এলিমেন্টগুলো সরাসরি আপডেট)
-    }
-
-
-    // --- অ্যাপ লোড হওয়ার ইভেন্ট ---
-    window.addEventListener('load', async () => {
-        // ... (আগের ফেচ এবং সেটাপ কোড অপরিবর্তিত)
-        
-        // সবশেষে প্রি-লোডার 숨ানো
-        const preloader = document.getElementById('preloader');
-        preloader.style.opacity = '0';
-        setTimeout(() => preloader.style.display = 'none', 500);
+    window.addEventListener('load', async ()=>{
+        try{if(typeof Telegram!=="undefined"){Telegram.WebApp.ready();tgUser=Telegram.WebApp.initDataUnsafe?.user||{}}}catch(e){console.warn("Not in Telegram env.")}
+        try{const e=await fetch(`${SERVER_URL}/api/data/${tgUser.id||"default_user"}`);if(!e.ok)throw new Error("Server not available");gameState=await e.json()}catch(e){return console.error("Server connection failed:",e),void alert("Could not connect to server!")}
+        gameState.profile.name=tgUser.first_name?`${tgUser.first_name} ${tgUser.last_name||""}`.trim():"PAPA Player";
+        const e=document.getElementById("navWrapper");e.innerHTML=navItemsConfig.map(t=>`<div class="swiper-slide nav-item" data-page="${t.id}">${t.icon}<span>${t.label}</span></div>`).join(""),new Swiper(".bottom-nav-slider",{slidesPerView:4,spaceBetween:10});
+        const t=Date.now()/1e3,a=t-(gameState.last_ad_reward_time||0);a<AD_COOLDOWN&&startAdCooldown(AD_COOLDOWN-a);
+        document.querySelectorAll(".nav-item").forEach(e=>e.addEventListener("click",()=>showPage(e.dataset.page)));
+        document.getElementById("tap-circle").addEventListener("click",handleTap);
+        renderTasks();renderAdsTasks();updateAllUI();
+        showPage("earnPage"); // নিশ্চিত করা হলো যে earnPage দিয়েই শুরু হবে
+        const preloader=document.getElementById("preloader");preloader.style.opacity="0",setTimeout(()=>preloader.style.display="none",500)
     });
-
-    // (বাকি সব জাভাস্ক্রিপ্ট ফাংশন আগের মতোই অপরিবর্তিত থাকবে)
 </script>
 </body>
 </html>
