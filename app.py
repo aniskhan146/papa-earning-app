@@ -1,148 +1,113 @@
-from flask import Flask, jsonify, request, session
-from flask_cors import CORS
-from datetime import datetime
 import os
-import sqlite3
-import json
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from datetime import datetime, timedelta
 
+# --- অ্যাপ সেটআপ ---
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
-CORS(app, supports_credentials=True)
+CORS(app)  # ফ্রন্টএন্ডকে অ্যাক্সেস দেওয়ার জন্য
 
-DATABASE = 'users.db'
+# --- ইন-মেমোরি ডেটাবেস (শুধুমাত্র ডেমোর জন্য) ---
+# একটি বাস্তব অ্যাপ্লিকেশনে এখানে PostgreSQL, MongoDB বা Redis ব্যবহার করা উচিত।
+# Render-এর ফ্রি সার্ভার রিস্টার্ট হলে এই ডেটা রিসেট হয়ে যাবে।
+user_data = {
+    'balance': 15.75,
+    'lifetime_points': 150.25,
+    'last_ad_time': 0,  # UNIX timestamp for cooldown
+    'last_daily_bonus': None,  # ISO format string date
+    'history': [
+        {'type': 'Initial Bonus', 'amount': 10.00, 'date': '2023-10-27T10:00:00Z'},
+        {'type': 'Ad Reward', 'amount': 5.75, 'date': '2023-10-27T11:30:00Z'},
+    ]
+}
 
-# ডাটাবেস কানেকশন ফাংশন
-def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+# --- পুরস্কারের পরিমাণ ---
+REWARDS = {
+    'adsgram': 2.50,
+    'monetag_rewarded': 5.00,
+    'monetag_interstitial': 1.25,
+    'daily_bonus': 25.00
+}
 
-# ডাটাবেস ইনিশিয়ালাইজ করার জন্য
-def init_db():
-    with app.app_context():
-        db = get_db()
-        with open('schema.sql', 'r') as f:
-            db.executescript(f.read())
-        db.commit()
+# ৩০ সেকেন্ডের গ্লোবাল কুলডাউন
+AD_COOLDOWN_SECONDS = 30
 
-# ইউজার ডেটা নেওয়া বা তৈরি করা
-def get_user_data():
-    user_id = session.get('user_id')
-    db = get_db()
+# --- API রুটস ---
 
-    if not user_id:
-        cursor = db.execute(
-            'INSERT INTO users (balance, lifetime_points, history, last_ad_time, last_daily_bonus) VALUES (?, ?, ?, ?, ?)',
-            (0.0, 0.0, json.dumps([]), 0, None)
-        )
-        db.commit()
-        user_id = str(cursor.lastrowid)
-        session['user_id'] = user_id
-
-    user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-    if not user:
-        # যদি না পাওয়া যায়, সেশন রিসেট করে আবার কল করো
-        session.pop('user_id', None)
-        return get_user_data()
-
-    user_data = dict(user)
-    user_data['history'] = json.loads(user_data['history'])
-    return user_data
-
-# ইউজার ডেটা আপডেট করা
-def update_user_data(user_data):
-    db = get_db()
-    history_json = json.dumps(user_data['history'])
-    db.execute('UPDATE users SET balance = ?, lifetime_points = ?, history = ?, last_ad_time = ?, last_daily_bonus = ? WHERE id = ?',
-               (user_data['balance'], user_data['lifetime_points'], history_json, user_data['last_ad_time'], user_data['last_daily_bonus'], user_data['id']))
-    db.commit()
-
-# ট্রানজেকশন যোগ করা
-def add_transaction(user_data, type_, amount):
-    transaction = {'type': type_, 'amount': amount, 'date': datetime.now().isoformat()}
-    user_data['history'].insert(0, transaction)
-    if len(user_data['history']) > 50:
-        user_data['history'].pop()
-
-# কনফিগারেশন
-REWARD_PER_AD = 0.10
-REWARD_PER_MONETAG_REWARDED_AD = 0.08
-REWARD_PER_MONETAG_INTERSTITIAL = 0.05
-DAILY_BONUS = 0.50
-COOLDOWN_SECONDS = 30
-
-# Routes
 @app.route('/')
-def index():
-    return "Backend is running!"
+def home():
+    """সার্ভার চলছে কিনা তা নিশ্চিত করার জন্য মূল রুট"""
+    return "PAPA Earning API is running successfully!"
 
-@app.route('/api/data')
-def get_data_api():
-    user_data = get_user_data()
+@app.route('/api/data', methods=['GET'])
+def get_user_data():
+    """ব্যবহারকারীর সমস্ত ডেটা প্রদান করে"""
     return jsonify(user_data)
 
 @app.route('/api/reward', methods=['POST'])
-def give_reward():
-    user_data = get_user_data()
+def grant_reward():
+    """বিজ্ঞাপন দেখার জন্য ব্যবহারকারীকে পুরস্কৃত করে"""
+    global user_data
+
+    # কুলডাউন চেক করা
+    current_time = datetime.now().timestamp()
+    time_since_last_ad = current_time - user_data['last_ad_time']
+    
+    if time_since_last_ad < AD_COOLDOWN_SECONDS:
+        remaining_time = AD_COOLDOWN_SECONDS - time_since_last_ad
+        return jsonify({'error': f'Please wait {int(remaining_time)} more seconds'}), 429 # 429 = Too Many Requests
+
+    # পুরস্কার যোগ করা
     data = request.json
     ad_type = data.get('type')
-    current_time = datetime.now().timestamp()
+    
+    if ad_type not in REWARDS:
+        return jsonify({'error': 'Invalid reward type'}), 400
 
-    if current_time - user_data['last_ad_time'] < COOLDOWN_SECONDS:
-        return jsonify({'error': 'Please wait for cooldown'}), 429
-
-    reward_map = {
-        'adsgram': (REWARD_PER_AD, 'AdsGram Reward'),
-        'monetag_rewarded': (REWARD_PER_MONETAG_REWARDED_AD, 'Monetag Reward'),
-        'monetag_interstitial': (REWARD_PER_MONETAG_INTERSTITIAL, 'Monetag Ad')
-    }
-
-    if ad_type not in reward_map:
-        return jsonify({'error': 'Invalid ad type'}), 400
-
-    reward, transaction_type = reward_map[ad_type]
-    user_data['balance'] += reward
-    user_data['lifetime_points'] += reward
+    amount = REWARDS[ad_type]
+    user_data['balance'] += amount
+    user_data['lifetime_points'] += amount
     user_data['last_ad_time'] = current_time
-    add_transaction(user_data, transaction_type, reward)
-    update_user_data(user_data)
-    return jsonify({'success': True, 'balance': user_data['balance']})
+
+    # ইতিহাস যুক্ত করা
+    user_data['history'].insert(0, {
+        'type': f'{ad_type.replace("_", " ").title()} Reward',
+        'amount': amount,
+        'date': datetime.utcnow().isoformat() + 'Z'
+    })
+
+    return jsonify({
+        'message': f'Successfully rewarded {amount} points!',
+        'new_balance': user_data['balance']
+    })
 
 @app.route('/api/daily_bonus', methods=['POST'])
 def claim_daily_bonus():
-    user_data = get_user_data()
-    today_str = datetime.now().date().isoformat()
-
+    """প্রতি ২৪ ঘণ্টায় একবার ডেইলি বোনাস প্রদান করে"""
+    global user_data
+    
+    today_str = datetime.utcnow().date().isoformat()
+    
     if user_data['last_daily_bonus'] == today_str:
-        return jsonify({'error': 'Already claimed today'}), 400
-
-    user_data['balance'] += DAILY_BONUS
-    user_data['lifetime_points'] += DAILY_BONUS
+        return jsonify({'error': 'Daily bonus already claimed for today'}), 400
+        
+    amount = REWARDS['daily_bonus']
+    user_data['balance'] += amount
+    user_data['lifetime_points'] += amount
     user_data['last_daily_bonus'] = today_str
-    add_transaction(user_data, 'Daily Bonus', DAILY_BONUS)
-    update_user_data(user_data)
-    return jsonify({'success': True, 'message': f'You received {DAILY_BONUS} bonus points!'})
 
-@app.route('/api/withdraw', methods=['POST'])
-def withdraw_points():
-    user_data = get_user_data()
-    data = request.json
-    try:
-        amount = float(data.get('amount', 0))
-    except (ValueError, TypeError):
-        return jsonify({'error': 'Invalid amount'}), 400
+    user_data['history'].insert(0, {
+        'type': 'Daily Bonus',
+        'amount': amount,
+        'date': datetime.utcnow().isoformat() + 'Z'
+    })
 
-    if amount <= 0:
-        return jsonify({'error': 'Withdrawal amount must be positive'}), 400
+    return jsonify({
+        'message': f'🎉 Congratulations! You have claimed your daily bonus of {amount} points!',
+        'new_balance': user_data['balance']
+    })
 
-    if user_data['balance'] < amount:
-        return jsonify({'error': 'Insufficient balance'}), 400
-
-    user_data['balance'] -= amount
-    add_transaction(user_data, 'Withdrawal', -amount)
-    update_user_data(user_data)
-    return jsonify({'success': True, 'message': f'Withdrawal request for {amount} points submitted.'})
-
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+# --- সার্ভার রান করা ---
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
