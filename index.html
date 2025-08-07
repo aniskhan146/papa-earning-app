@@ -9,7 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- AdsGram SDK -->
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <!-- Monetag SDK: Fixed single quotes to double quotes -->
+    <!-- Monetag SDK: ঠিক করা হয়েছে -> src অ্যাট্রিবিউটে ডাবল কোট ব্যবহার করা হয়েছে -->
     <script src="//libtl.com/sdk.js" data-zone="9678845" data-sdk="show_9678845"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -31,18 +31,16 @@
     <main class="flex-grow p-4 overflow-y-auto">
         <!-- Earn Page -->
         <div id="earnPage" class="page active">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-teal-400">PAPA Earning</h1>
-            </div>
+            <div class="text-center mb-6"><h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-teal-400">PAPA Earning</h1></div>
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="bg-gray-700/50 p-4 rounded-xl text-center"><p class="text-gray-400 text-sm">Current Balance</p><p id="balance" class="text-2xl font-bold text-green-400">0.00</p></div>
                 <div class="bg-gray-700/50 p-4 rounded-xl text-center"><p class="text-gray-400 text-sm">Lifetime Points</p><p id="lifetimePoints" class="text-2xl font-bold text-teal-300">0.00</p></div>
             </div>
             
             <div class="text-center my-6 space-y-4">
-                <!-- Added type="button" to all buttons -->
+                <!-- ঠিক করা হয়েছে -> type="button" যোগ করা হয়েছে -->
                 <button type="button" id="viewAdBtn" class="w-full btn-grad btn-grad-green font-semibold py-3 px-6 rounded-lg shadow-lg text-lg">💰 Watch Ad (AdsGram)</button>
-                <!-- Fixed "&" to "&amp;" and added type="button" -->
+                <!-- ঠিক করা হয়েছে -> type="button" যোগ করা হয়েছে এবং '&' কে '&amp;' করা হয়েছে -->
                 <button type="button" id="viewMonetagRewardedAdBtn" class="w-full btn-grad btn-grad-purple font-semibold py-3 px-6 rounded-lg shadow-lg text-lg">🎁 Watch &amp; Earn (Monetag)</button>
                 <button type="button" id="viewMonetagAdBtn" class="w-full btn-grad btn-grad-blue font-semibold py-3 px-6 rounded-lg shadow-lg text-lg" disabled>💎 Show Ad (For Pop-ups)</button>
             </div>
@@ -63,7 +61,7 @@
         <div id="withdrawPage" class="page">
             <h2 class="text-2xl font-bold text-center mb-6 text-green-400">Withdraw Points</h2>
             <div class="bg-gray-800 p-6 rounded-lg">
-                 <p class="mb-4 text-gray-300">Enter your withdrawal details below.</p>
+                <p class="mb-4 text-gray-300">Enter your withdrawal details below.</p>
                 <input type="text" placeholder="Your Wallet Address" class="w-full p-3 rounded bg-gray-700 border border-gray-600 mb-3 text-white">
                 <input type="number" placeholder="Amount (e.g., 10.00)" class="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white">
                 <button type="button" id="submitWithdrawBtn" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Submit Request</button>
@@ -72,20 +70,18 @@
 
         <!-- Profile Page with History -->
         <div id="profilePage" class="page">
-            <h2 class="text-2xl font-bold text-center mb-4 text-green-400">Profile &amp; History</h2> <!-- Fixed "&" here too -->
+            <h2 class="text-2xl font-bold text-center mb-4 text-green-400">Profile &amp; History</h2> <!-- ঠিক করা হয়েছে: &amp; -->
              <div class="bg-gray-800 p-6 rounded-lg text-center mb-4">
                 <p class="mb-4 text-gray-300">Claim your daily bonus once every 24 hours!</p>
                 <button type="button" id="dailyBonusBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg text-lg">🎁 Claim Daily Bonus</button>
                 <p id="bonusMessage" class="mt-4 text-yellow-400 h-6"></p>
             </div>
             <h3 class="text-xl font-bold text-center mb-4 text-gray-300">Transaction History</h3>
-            <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto">
-                <!-- History items will be injected here -->
-            </div>
+            <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto"><!-- History items --></div>
         </div>
     </main>
 
-    <!-- Bottom Navigation: Fixed all buttons here -->
+    <!-- Bottom Navigation -->
     <nav class="bg-gray-800 shadow-lg p-2 flex justify-around">
         <button type="button" data-page="earnPage" class="nav-btn active flex-1 flex flex-col items-center text-gray-400">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A6.5 6.5 0 1012 5.5a6.5 6.5 0 000 13z"></path></svg>
@@ -105,11 +101,205 @@
         </button>
     </nav>
 
-    <!-- Script remains unchanged, but placed inside for completeness -->
+    <!-- সম্পূর্ণ এবং কার্যকরী JavaScript কোড -->
     <script>
+    // --- Configuration ---
+    const ADSGRAM_BLOCK_ID = "YOUR_ACTUAL_ADSGRAM_ID"; // এখানে আপনার আসল AdsGram ID দিন
     const SERVER_URL = 'https://papa-earning-app.onrender.com';
-    const ADSGRAM_BLOCK_ID = "YOUR_ACTUAL_ADSGRAM_ID";
-    /* All the JavaScript logic remains the same */
+    let adController;
+    let globalCooldownInterval;
+
+    // --- DOM Elements ---
+    const balanceElement = document.getElementById('balance');
+    const lifetimePointsElement = document.getElementById('lifetimePoints');
+    const viewAdBtn = document.getElementById('viewAdBtn');
+    const viewMonetagAdBtn = document.getElementById('viewMonetagAdBtn');
+    const viewMonetagRewardedAdBtn = document.getElementById('viewMonetagRewardedAdBtn');
+    const messageArea = document.getElementById('messageArea');
+    const bonusMessage = document.getElementById('bonusMessage');
+    const dailyBonusBtn = document.getElementById('dailyBonusBtn');
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const pages = document.querySelectorAll('.page');
+    const historyList = document.getElementById('historyList');
+
+    function showPage(pageId) {
+        pages.forEach(page => page.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === pageId));
+        if (pageId === 'profilePage') fetchData();
+    }
+    
+    function initializeAdsGram() {
+        if (window.Adsgram && ADSGRAM_BLOCK_ID && ADSGRAM_BLOCK_ID !== "YOUR_ACTUAL_ADSGRAM_ID") {
+            try {
+                adController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+            } catch (e) {
+                console.error("AdsGram init failed:", e);
+                disableButton(viewAdBtn, "AdsGram Error");
+            }
+        } else {
+            disableButton(viewAdBtn, !window.Adsgram ? "Ad Service Error" : "Setup Required");
+        }
+    }
+
+    async function triggerReward(adType) {
+        try {
+            messageArea.textContent = 'Verifying reward...';
+            disableAllAdButtons(); // পয়েন্ট পাওয়ার সময় বাটন নিষ্ক্রিয় করা
+            const response = await fetch(`${SERVER_URL}/api/reward`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: adType })
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                messageArea.textContent = `🎉 ${data.message}`;
+                fetchData(); // Fetch the latest data to update UI and cooldown
+            } else {
+                messageArea.textContent = data.error || "Could not claim reward.";
+                resetAllButtonVisuals();
+            }
+        } catch (error) {
+            console.error('Failed to trigger reward:', error);
+            messageArea.textContent = "Server error. Could not claim reward.";
+            resetAllButtonVisuals();
+        }
+    }
+
+    function handleViewAd() {
+        if (!adController || viewAdBtn.disabled) return;
+        messageArea.textContent = 'Loading ad...';
+        disableAllAdButtons();
+
+        adController.show().then(result => {
+            console.log('AdsGram ad finished successfully.', result);
+            triggerReward('adsgram');
+        }).catch(error => {
+            console.error('AdsGram ad failed or was skipped:', error);
+            messageArea.textContent = "Ad was skipped. No points earned.";
+            resetAllButtonVisuals();
+        });
+    }
+
+    function handleMonetagRewardedAd() {
+        if (viewMonetagRewardedAdBtn.disabled) return;
+        messageArea.textContent = 'Loading rewarded ad...';
+        disableAllAdButtons();
+        
+        show_9678845().then(() => {
+            console.log('Monetag rewarded ad completed.');
+            triggerReward('monetag_rewarded');
+        }).catch(() => {
+            console.error('Monetag rewarded ad failed or was skipped.');
+            messageArea.textContent = "Rewarded ad skipped. No points.";
+            resetAllButtonVisuals();
+        });
+    }
+    
+    function disableAllAdButtons() {
+        [viewAdBtn, viewMonetagRewardedAdBtn].forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('btn-disabled');
+            btn.classList.remove('btn-grad-green', 'btn-grad-purple');
+        });
+    }
+
+    function resetAllButtonVisuals() {
+        [viewAdBtn, viewMonetagRewardedAdBtn].forEach(btn => btn.disabled = false);
+        viewAdBtn.classList.remove('btn-disabled');
+        viewAdBtn.classList.add('btn-grad-green');
+        viewMonetagRewardedAdBtn.classList.remove('btn-disabled');
+        viewMonetagRewardedAdBtn.classList.add('btn-grad-purple');
+    }
+
+    function startGlobalCooldownTimer(initialRemaining) {
+        clearInterval(globalCooldownInterval);
+        let remaining = Math.ceil(initialRemaining);
+        disableAllAdButtons();
+
+        globalCooldownInterval = setInterval(() => {
+            if (remaining > 0) {
+                messageArea.textContent = `Next ad bonus in ${remaining}s`;
+                remaining--;
+            } else {
+                clearInterval(globalCooldownInterval);
+                messageArea.textContent = 'Ad bonus is available now!';
+                resetAllButtonVisuals();
+            }
+        }, 1000);
+    }
+    
+    function disableButton(btn, text) {
+        btn.textContent = text;
+        btn.disabled = true;
+        btn.classList.add('btn-disabled');
+        btn.classList.remove('btn-grad-green', 'btn-grad-purple', 'btn-grad-blue');
+    }
+
+    async function fetchData() {
+        try {
+            const response = await fetch(`${SERVER_URL}/api/data`);
+            if (!response.ok) throw new Error(`Network response: ${response.statusText}`);
+            const data = await response.json();
+            updateUI(data);
+        } catch (error) {
+            console.error('Failed to fetch initial data:', error);
+            messageArea.textContent = "Could not connect to server.";
+        }
+    }
+    
+    function updateUI(data) {
+        balanceElement.textContent = data.balance.toFixed(2);
+        lifetimePointsElement.textContent = data.lifetime_points.toFixed(2);
+        renderHistory(data.history);
+        checkDailyBonusStatus(data.last_daily_bonus);
+        
+        const now = new Date().getTime() / 1000;
+        const timePassed = now - data.last_ad_time;
+        const cooldownSeconds = 30;
+        if (timePassed < cooldownSeconds) {
+            startGlobalCooldownTimer(cooldownSeconds - timePassed);
+        }
+    }
+    
+    function renderHistory(history) {
+        historyList.innerHTML = history.length === 0 ? `<p class="text-gray-500 text-center">No transactions.</p>` :
+            history.map(tx => `<div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-lg"><div><p class="font-semibold">${tx.type}</p><p class="text-xs text-gray-400">${new Date(tx.date).toLocaleString()}</p></div><p class="font-bold text-green-400">+${tx.amount.toFixed(2)}</p></div>`).join('');
+    }
+
+    async function handleDailyBonus() {
+        try {
+            const response = await fetch(`${SERVER_URL}/api/daily_bonus`, { method: 'POST' });
+            const data = await response.json();
+            if (response.ok) {
+                bonusMessage.textContent = data.message;
+                fetchData();
+            } else {
+                bonusMessage.textContent = data.error;
+            }
+        } catch (error) { bonusMessage.textContent = "Server error."; }
+    }
+
+    function checkDailyBonusStatus(lastClaimISO) {
+        const lastClaimDate = lastClaimISO ? new Date(lastClaimISO).toDateString() : null;
+        const today = new Date().toDateString();
+        dailyBonusBtn.disabled = lastClaimDate === today;
+        dailyBonusBtn.classList.toggle('btn-disabled', lastClaimDate === today);
+    }
+
+    // --- Event Listeners & Initial Setup ---
+    navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+    viewAdBtn.addEventListener('click', handleViewAd);
+    viewMonetagRewardedAdBtn.addEventListener('click', handleMonetagRewardedAd);
+    dailyBonusBtn.addEventListener('click', handleDailyBonus);
+    
+    window.addEventListener('load', () => {
+        if(typeof Telegram !== 'undefined') Telegram.WebApp.ready();
+        fetchData();
+        initializeAdsGram();
+        disableButton(viewMonetagAdBtn, '💎 For Pop-ups Only');
+    });
     </script>
 </body>
 </html>
